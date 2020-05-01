@@ -9,26 +9,32 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/storer"
 )
 
-func VersionAtCommitForRepo(workingDirPath string, commitish string) (string, error) {
+func VersionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision) (string, error) {
 	// Open repository
-	// repo, err := git.PlainOpen(workingDirPath)
-	// if err != nil {
-	// 	return "", fmt.Errorf("error opening repository: %w", err)
-	// }
-	//
-	// // Resolve the `commitish` we were given into a reference
-	// headRef, err := repo.Reference("HEAD", true)
-	// if err != nil {
-	// 	return "", fmt.Errorf("error resolving commitish to reference: %w", err)
-	// }
-	//
-	// isExact, err := isExactTag(repo, headRef.Hash())
-	// if err != nil {
-	// 	return "", err
-	// }
-	//
-	// fmt.Println(isExact)
-	//
+	repo, err := git.PlainOpen(workingDirPath)
+	if err != nil {
+		return "", fmt.Errorf("error opening repository: %w", err)
+	}
+
+	// Resolve the `commitish` we were given into a reference
+	revision, err := repo.ResolveRevision(commitish)
+	if err != nil {
+		return "", fmt.Errorf("error resolving commitish to reference: %w", err)
+	}
+	commit, err := repo.CommitObject(*revision)
+	if err != nil {
+		return "", fmt.Errorf("error resolving reference: %w", err)
+	}
+
+	// First check whether we had a commit with an exact tag to start with
+	isExact, exactMatch, err := isExactTag(repo, commit.Hash)
+	if err != nil {
+		return "", fmt.Errorf("isExactTag: %w", err)
+	}
+	if isExact {
+		fmt.Println(exactMatch.String())
+	}
+
 	return "", nil
 }
 

@@ -8,7 +8,7 @@ import (
 
 func TestMostRecentTag(t *testing.T) {
 	t.Run("Repo with commit after tag", func(t *testing.T) {
-		repo, err := makeTagTestRepo()
+		repo, err := testRepoSingleCommitPastRelease()
 		require.NoError(t, err)
 		require.NotNil(t, repo)
 
@@ -24,7 +24,7 @@ func TestMostRecentTag(t *testing.T) {
 	})
 
 	t.Run("Repo with no tags", func(t *testing.T) {
-		repo, err := makeSingleCommitTestRepo()
+		repo, err := testRepoSingleCommit()
 		require.NoError(t, err)
 		require.NotNil(t, repo)
 
@@ -41,7 +41,7 @@ func TestMostRecentTag(t *testing.T) {
 }
 
 func TestIsExactTag(t *testing.T) {
-	repo, err := makeTagTestRepo()
+	repo, err := testRepoSingleCommitPastRelease()
 	require.NoError(t, err)
 	require.NotNil(t, repo)
 

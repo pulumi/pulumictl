@@ -11,13 +11,13 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 
-func makeTagTestRepo() (*git.Repository, error) {
-	workDir := memfs.New()
+var testSignature = &object.Signature{
+	Name:  "Test User",
+	Email: "test@localhost",
+}
 
-	testSignature := &object.Signature{
-		Name:  "Test User",
-		Email: "test@localhost",
-	}
+func testRepoSingleCommitPastRelease() (*git.Repository, error) {
+	workDir := memfs.New()
 
 	repo, err := git.Init(memory.NewStorage(), workDir)
 	if err != nil {
@@ -57,13 +57,8 @@ func makeTagTestRepo() (*git.Repository, error) {
 	return repo, nil
 }
 
-func makeSingleCommitTestRepo() (*git.Repository, error) {
+func testRepoSingleCommit() (*git.Repository, error) {
 	workDir := memfs.New()
-
-	testSignature := &object.Signature{
-		Name:  "Test User",
-		Email: "test@localhost",
-	}
 
 	repo, err := git.Init(memory.NewStorage(), workDir)
 	if err != nil {
