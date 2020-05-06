@@ -6,6 +6,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestStripModuleTagPrefixes(t *testing.T) {
+	require.Equal(t, "0.0.0", stripModuleTagPrefixes("v0.0.0"))
+	require.Equal(t, "2.1.0", stripModuleTagPrefixes("sdk/v2.1.0"))
+	require.Equal(t, "2.1.0", stripModuleTagPrefixes("sdk/nodejs/v2.1.0"))
+}
+
 func TestMostRecentTag(t *testing.T) {
 	t.Run("Repo with commit after tag", func(t *testing.T) {
 		repo, err := testRepoSingleCommitPastRelease()
