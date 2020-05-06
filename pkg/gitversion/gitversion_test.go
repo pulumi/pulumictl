@@ -73,3 +73,34 @@ func TestIsExactTag(t *testing.T) {
 		require.True(t, isExact)
 	})
 }
+
+func TestIsWorktreeDirty(t *testing.T) {
+	repo, err := testRepoSingleCommit()
+	require.NoError(t, err)
+	require.NotNil(t, repo)
+
+	t.Run("Working tree is clean", func(t *testing.T) {
+		clean, err := workTreeIsDirty(repo)
+		require.NoError(t, err)
+		require.False(t, clean)
+	})
+
+	// Add a file but don't commit it
+	worktree, err := repo.Worktree()
+	if err != nil {
+		t.Errorf("worktree: %w", err)
+	}
+
+	workDir := worktree.Filesystem
+
+	// Write a file but don't commit it
+	if err := writeFile(workDir, "foo", "bar"); err != nil {
+		t.Errorf("writeFile: %w", err)
+	}
+
+	t.Run("Working tree is dirty", func(t *testing.T) {
+		dirty, err := workTreeIsDirty(repo)
+		require.NoError(t, err)
+		require.True(t, dirty)
+	})
+}
