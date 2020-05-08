@@ -16,12 +16,23 @@ var testSignature = &object.Signature{
 	Email: "test@localhost",
 }
 
-func testRepoSingleCommitPastRelease() (*git.Repository, error) {
+func testRepoCreate() (*git.Repository, error) {
 	workDir := memfs.New()
 
 	repo, err := git.Init(memory.NewStorage(), workDir)
+
 	if err != nil {
 		return nil, fmt.Errorf("git init: %w", err)
+	}
+
+	return repo, nil
+}
+
+func testRepoSingleCommitPastRelease() (*git.Repository, error) {
+
+	repo, err := testRepoCreate()
+	if err != nil {
+		return nil, fmt.Errorf("repo create: %w", err)
 	}
 
 	workTree, err := repo.Worktree()
@@ -29,6 +40,7 @@ func testRepoSingleCommitPastRelease() (*git.Repository, error) {
 		return nil, fmt.Errorf("worktree: %w", err)
 	}
 
+	workDir := workTree.Filesystem
 	if err := writeFile(workDir, "hello-world", "Hello World"); err != nil {
 		return nil, fmt.Errorf("writeFile: %w", err)
 	}
@@ -58,11 +70,10 @@ func testRepoSingleCommitPastRelease() (*git.Repository, error) {
 }
 
 func testRepoSingleCommit() (*git.Repository, error) {
-	workDir := memfs.New()
 
-	repo, err := git.Init(memory.NewStorage(), workDir)
+	repo, err := testRepoCreate()
 	if err != nil {
-		return nil, fmt.Errorf("git init: %w", err)
+		return nil, fmt.Errorf("repo create: %w", err)
 	}
 
 	workTree, err := repo.Worktree()
@@ -70,6 +81,7 @@ func testRepoSingleCommit() (*git.Repository, error) {
 		return nil, fmt.Errorf("worktree: %w", err)
 	}
 
+	workDir := workTree.Filesystem
 	if err := writeFile(workDir, "hello-world", "Hello World"); err != nil {
 		return nil, fmt.Errorf("writeFile: %w", err)
 	}
