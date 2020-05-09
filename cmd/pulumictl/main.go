@@ -1,18 +1,28 @@
 package main
 
 import (
-	"github.com/davecgh/go-spew/spew"
+	"fmt"
+	"os"
 
-	"github.com/pulumi/pulumictl/pkg/gitversion"
+	"github.com/spf13/cobra"
+
+	"github.com/pulumi/pulumictl/pkg/contract"
 )
 
-func main() {
-	// version, err := gitversion.versionAtCommitForRepo("/Users/James/Code/pulumi/pulumi-aws", "a5b8388061a1cdad34c399e3699f05621b0e0464")
-	version, err := gitversion.GetLanguageVersions("/Users/James/Code/pulumi/pulumi-aws", "HEAD")
-	if err != nil {
-		panic(err)
+func configureCLI() *cobra.Command {
+	rootCommand := &cobra.Command{
+		Use: "pulumictl",
+		Long: "A swiss army knife for Pulumi development",
 	}
 
-	spew.Config.DisableMethods = true
-	spew.Dump(version)
+	return rootCommand
+}
+
+func main() {
+	rootCommand := configureCLI()
+
+	if err := rootCommand.Execute(); err != nil {
+		contract.IgnoreIoError(fmt.Fprintf(os.Stderr, "%s", err))
+		os.Exit(1)
+	}
 }
