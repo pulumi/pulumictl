@@ -6,14 +6,17 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/pulumi/pulumictl/cmd/pulumictl/util"
 	"github.com/pulumi/pulumictl/pkg/contract"
 )
 
 func configureCLI() *cobra.Command {
 	rootCommand := &cobra.Command{
-		Use: "pulumictl",
+		Use:  "pulumictl",
 		Long: "A swiss army knife for Pulumi development",
 	}
+
+	rootCommand.AddCommand(util.Command())
 
 	return rootCommand
 }
