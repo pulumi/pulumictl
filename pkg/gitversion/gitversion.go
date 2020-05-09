@@ -14,11 +14,15 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/storer"
 )
 
+// LanguageVersions contains a generic semantic version and Python-specific version number.
 type LanguageVersions struct {
 	SemVer string
 	Python string
 }
 
+// GetLanguageVersions calculates the generic and Python-specific version numbers for the
+// given `commitish` based on the most recent tag, the status of the work tree with respect
+// to dirty files, and a timestamp.
 func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*LanguageVersions, error) {
 	versionComponents, err := versionAtCommitForRepo(workingDirPath, commitish)
 	if err != nil {
@@ -30,7 +34,12 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 	genericVersion.Major = versionComponents.Semver.Major
 	genericVersion.Minor = versionComponents.Semver.Minor
 	genericVersion.Patch = versionComponents.Semver.Patch
-	genericVersion.Pre = versionComponents.npmPreVersion()
+	if len(versionComponents.Semver.Pre) != 0 {
+		genericVersion.Pre = []semver.PRVersion{
+			versionComponents.Semver.Pre[0],
+			{VersionStr: strconv.FormatInt(versionComponents.Timestamp.UTC().Unix(), 10)},
+		}
+	}
 
 	// Python uses PEP440, but Pypi has some curiosities.
 	pythonPreVersion := ""
@@ -56,6 +65,7 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 	}, nil
 }
 
+// versionComponents groups the various parameters which impact version calculation
 type versionComponents struct {
 	Semver    semver.Version
 	Dirty     bool
@@ -63,19 +73,8 @@ type versionComponents struct {
 	Timestamp time.Time
 }
 
-func (v *versionComponents) npmPreVersion() []semver.PRVersion {
-	if len(v.Semver.Pre) == 0 {
-		return nil
-	}
-
-	return []semver.PRVersion{
-		v.Semver.Pre[0],
-		{
-			VersionStr: strconv.FormatInt(v.Timestamp.UTC().Unix(), 10),
-		},
-	}
-}
-
+// versionAtCommitForRepo determines the version components on which the language-specific variants
+// are calculated from.
 func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision) (*versionComponents, error) {
 	// Open repository
 	repo, err := git.PlainOpen(workingDirPath)

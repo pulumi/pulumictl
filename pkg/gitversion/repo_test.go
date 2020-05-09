@@ -29,7 +29,6 @@ func testRepoCreate() (*git.Repository, error) {
 }
 
 func testRepoSingleCommitPastRelease() (*git.Repository, error) {
-
 	repo, err := testRepoCreate()
 	if err != nil {
 		return nil, fmt.Errorf("repo create: %w", err)
@@ -70,7 +69,6 @@ func testRepoSingleCommitPastRelease() (*git.Repository, error) {
 }
 
 func testRepoSingleCommit() (*git.Repository, error) {
-
 	repo, err := testRepoCreate()
 	if err != nil {
 		return nil, fmt.Errorf("repo create: %w", err)
