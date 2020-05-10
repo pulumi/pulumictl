@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/pulumi/pulumictl/cmd/pulumictl/util"
+	"github.com/pulumi/pulumictl/cmd/pulumictl/version"
 	"github.com/pulumi/pulumictl/pkg/contract"
 )
 
@@ -17,6 +18,7 @@ func configureCLI() *cobra.Command {
 	}
 
 	rootCommand.AddCommand(util.Command())
+	rootCommand.AddCommand(version.Command())
 
 	return rootCommand
 }
