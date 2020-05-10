@@ -11,7 +11,7 @@ import (
 
 func Command() *cobra.Command{
 	command := &cobra.Command{
-		Use: "version",
+		Use: "get-version",
 		Short: "Get the current version",
 		Long: `Get the current version of pulumictl`,
 		RunE: func(cmd *cobra.Command, args []string) error {
