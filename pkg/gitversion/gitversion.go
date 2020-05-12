@@ -41,26 +41,32 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 		}
 	}
 
+	preVersion := ""
 	// Python uses PEP440, but Pypi has some curiosities.
 	pythonPreVersion := ""
 	if len(genericVersion.Pre) != 0 {
 		switch genericVersion.Pre[0].VersionStr {
 		case "dev":
 			pythonPreVersion = fmt.Sprintf("dev%d", versionComponents.Timestamp.UTC().Unix())
+			preVersion = fmt.Sprintf("-dev.%d+%s", versionComponents.Timestamp.UTC().Unix(), versionComponents.ShortHash)
 		case "alpha":
 			pythonPreVersion = fmt.Sprintf("a%d", versionComponents.Timestamp.UTC().Unix())
+			preVersion = fmt.Sprintf("-alpha.%d+%s", versionComponents.Timestamp.UTC().Unix(), versionComponents.ShortHash)
 		case "beta":
 			pythonPreVersion = fmt.Sprintf("b%d", versionComponents.Timestamp.UTC().Unix())
+			preVersion = fmt.Sprintf("-beta.%d+%s", versionComponents.Timestamp.UTC().Unix(), versionComponents.ShortHash)
 		case "rc":
 			pythonPreVersion = fmt.Sprintf("rc%d", versionComponents.Timestamp.UTC().Unix())
+			preVersion = fmt.Sprintf("-rc.%d+%s", versionComponents.Timestamp.UTC().Unix(), versionComponents.ShortHash)
 		default:
-			return nil, fmt.Errorf("prerelease string %q incompatible with Pypi", genericVersion.Pre[0].VersionStr)
+			return nil, fmt.Errorf("prerelease string %q not valid semver string", genericVersion.Pre[0].VersionStr)
 		}
 	}
+	version := fmt.Sprintf("v%d.%d.%d%s", genericVersion.Major, genericVersion.Minor, genericVersion.Patch, preVersion)
 	pythonVersion := fmt.Sprintf("%d.%d.%d%s", genericVersion.Major, genericVersion.Minor, genericVersion.Patch, pythonPreVersion)
 
 	return &LanguageVersions{
-		SemVer: genericVersion.String(),
+		SemVer: version,
 		Python: pythonVersion,
 	}, nil
 }
@@ -122,7 +128,7 @@ func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision) 
 	return &versionComponents{
 		Semver:    version,
 		Dirty:     isDirty,
-		ShortHash: revision.String()[:10],
+		ShortHash: revision.String()[:8],
 		Timestamp: commit.Committer.When,
 	}, nil
 }
