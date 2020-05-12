@@ -13,8 +13,8 @@ import (
 
 func Command() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "version",
-		Short: "Calulate versions",
+		Use:   "get-version",
+		Short: "Calculate versions",
 		Long:  "Calculate a package version from repository tags and state",
 		Args:  cobra.MaximumNArgs(1),
 
