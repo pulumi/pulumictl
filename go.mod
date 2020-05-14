@@ -9,5 +9,6 @@ require (
 	github.com/go-git/go-git/v5 v5.0.0
 	github.com/rs/zerolog v1.18.0
 	github.com/spf13/cobra v1.0.0
+	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.5.1
 )
