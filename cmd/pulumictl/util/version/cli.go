@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	platform string
+	language string
 )
 
 func Command() *cobra.Command {
@@ -43,20 +43,25 @@ func Command() *cobra.Command {
 				repo = workingDir
 			}
 
-			platform = viper.GetString("platform")
+			language = viper.GetString("language")
 
 			versions, err := gitversion.GetLanguageVersions(repo, plumbing.Revision(commitish))
 			if err != nil {
 				return fmt.Errorf("error calculating version: %w", err)
 			}
 
-			switch strings.ToLower(platform) {
+			// FIXME: We could get the values here from the struct fields?
+			switch strings.ToLower(language) {
 			case "generic":
 				fmt.Println(versions.SemVer)
 			case "python":
 				fmt.Println(versions.Python)
+			case "javascript":
+				fmt.Println(versions.JavaScript)
+			case "dotnet":
+				fmt.Println(versions.DotNet)
 			default:
-				return fmt.Errorf("invalid platform %q - valid platforms are %q and %q", platform, "python", "generic")
+				return fmt.Errorf("invalid language %q ", language)
 			}
 
 			return nil
@@ -64,10 +69,10 @@ func Command() *cobra.Command {
 	}
 
 	command.Flags().StringP("repo", "r", "", "path to repository, defaults to current working directory")
-	command.Flags().StringVarP(&platform, "platform", "p", "", "the platform for which the version should be output. `python` or `generic` are valid")
-	viper.SetDefault("platform", "generic")
-	viper.BindEnv("platform", "PULUMI_PLATFORM")
-	viper.BindPFlag("platform", command.Flags().Lookup("platform"))
+	command.Flags().StringVarP(&language, "language", "p", "", "the platform for which the version should be output.")
+	viper.SetDefault("language", "generic")
+	viper.BindEnv("language", "PULUMI_LANGUAGE")
+	viper.BindPFlag("language", command.Flags().Lookup("language"))
 
 	return command
 }
