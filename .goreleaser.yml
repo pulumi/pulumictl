@@ -25,3 +25,14 @@ changelog:
   skip: true
 release:
   prerelease: auto
+brews:
+  - 
+    name: pulumictl
+    github:
+      owner: pulumi
+      name: homebrew-tap
+    commit_author:
+      name: pulumi-bot
+      email: bot@pulumi.com
+    homepage: "https://pulumi.io"
+    description: "A swiss army knife for Pulumi development"
