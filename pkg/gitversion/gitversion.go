@@ -18,6 +18,8 @@ import (
 type LanguageVersions struct {
 	SemVer string
 	Python string
+	JavaScript string
+	DotNet string
 }
 
 // GetLanguageVersions calculates the generic and Python-specific version numbers for the
@@ -41,6 +43,8 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 		}
 	}
 
+
+	// a standard semantic version
 	preVersion := ""
 	// Python uses PEP440, but Pypi has some curiosities.
 	pythonPreVersion := ""
@@ -62,12 +66,27 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 			return nil, fmt.Errorf("prerelease string %q not valid semver string", genericVersion.Pre[0].VersionStr)
 		}
 	}
-	version := fmt.Sprintf("v%d.%d.%d%s", genericVersion.Major, genericVersion.Minor, genericVersion.Patch, preVersion)
-	pythonVersion := fmt.Sprintf("%d.%d.%d%s", genericVersion.Major, genericVersion.Minor, genericVersion.Patch, pythonPreVersion)
+
+	// Detect if the git worktree is dirty, and add `.dirty` to the version if it is
+	if versionComponents.Dirty {
+		preVersion = fmt.Sprintf("%s.dirty", preVersion)
+		pythonPreVersion = fmt.Sprintf("%s.dirty", pythonPreVersion)
+	}
+
+	// a base version with the pre release info
+	baseVersion := fmt.Sprintf("%d.%d.%d", genericVersion.Major, genericVersion.Minor, genericVersion.Patch)
+
+	// calculate versions for all languages
+	version := fmt.Sprintf("%s%s", baseVersion, preVersion)
+	pythonVersion := fmt.Sprintf("%s%s", baseVersion, pythonPreVersion)
+	jsVersion := fmt.Sprintf("v%s", version)
+	dotnetVersion := version
 
 	return &LanguageVersions{
 		SemVer: version,
 		Python: pythonVersion,
+		JavaScript: jsVersion,
+		DotNet: dotnetVersion,
 	}, nil
 }
 
