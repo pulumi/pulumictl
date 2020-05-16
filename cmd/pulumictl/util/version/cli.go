@@ -7,8 +7,13 @@ import (
 
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/pulumi/pulumictl/pkg/gitversion"
+)
+
+var (
+	platform string
 )
 
 func Command() *cobra.Command {
@@ -38,7 +43,7 @@ func Command() *cobra.Command {
 				repo = workingDir
 			}
 
-			platform, _ := cmd.Flags().GetString("platform")
+			platform = viper.GetString("platform")
 
 			versions, err := gitversion.GetLanguageVersions(repo, plumbing.Revision(commitish))
 			if err != nil {
@@ -59,7 +64,10 @@ func Command() *cobra.Command {
 	}
 
 	command.Flags().StringP("repo", "r", "", "path to repository, defaults to current working directory")
-	command.Flags().StringP("platform", "p", "generic", "the platform for which the version should be output. `python` or `generic` are valid")
+	command.Flags().StringVarP(&platform, "platform", "p", "", "the platform for which the version should be output. `python` or `generic` are valid")
+	viper.SetDefault("platform", "generic")
+	viper.BindEnv("platform", "PULUMI_PLATFORM")
+	viper.BindPFlag("platform", command.Flags().Lookup("platform"))
 
 	return command
 }
