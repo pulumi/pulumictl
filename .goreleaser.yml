@@ -23,3 +23,5 @@ snapshot:
   name_template: "{{ .Tag }}-SNAPSHOT"
 changelog:
   skip: true
+release:
+  prerelease: auto
