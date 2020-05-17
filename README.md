@@ -5,3 +5,14 @@
 The eventual aim is to provide a utility capable of performing hermetic builds of Pulumi components both locally and in Continuous Integration in order to remove variability and frustration from developer environments.
 
 _*Important Note:* This tool is only intended for use by people working on Pulumi itself, not for those using Pulumi to provision infrastructure!_
+
+## Installation
+
+Add the Pulumi homebrew tap and install:
+
+```
+brew tap pulumi/tap
+brew install pulumictl
+```
+
+
