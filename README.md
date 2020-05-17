@@ -15,4 +15,6 @@ brew tap pulumi/tap
 brew install pulumictl
 ```
 
+Or download the binary directly from Github releases and place it in your `$PATH`
+
 
