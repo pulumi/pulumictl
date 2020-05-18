@@ -3,8 +3,6 @@ package gitversion
 import (
 	"testing"
 
-	"github.com/go-git/go-git/v5/plumbing"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -81,17 +79,18 @@ func TestIsWorktreeDirty(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, repo)
 
-	t.Run("Working tree is clean", func(t *testing.T) {
-		clean, err := workTreeIsDirty(repo)
-		require.NoError(t, err)
-		require.False(t, clean)
-	})
-
 	// Add a file but don't commit it
 	worktree, err := repo.Worktree()
 	if err != nil {
 		t.Errorf("worktree: %w", err)
 	}
+	t.Log(worktree.Status())
+
+	t.Run("Working tree is clean", func(t *testing.T) {
+		clean, err := workTreeIsDirty(repo)
+		require.NoError(t, err)
+		require.False(t, clean)
+	})
 
 	workDir := worktree.Filesystem
 
@@ -104,23 +103,5 @@ func TestIsWorktreeDirty(t *testing.T) {
 		dirty, err := workTreeIsDirty(repo)
 		require.NoError(t, err)
 		require.True(t, dirty)
-	})
-}
-
-func TestLanguageVersions(t *testing.T) {
-	repo, err := testRepoSingleCommitPastRelease()
-
-	require.NoError(t, err)
-	require.NotNil(t, repo)
-
-	t.Run("With exact tag", func(t *testing.T) {
-		wt, err := repo.Worktree()
-		require.NoError(t, err)
-		require.NotNil(t, repo)
-		path := wt.Filesystem.Root()
-		require.NotNil(t, path)
-
-		versions, err := GetLanguageVersions(wt.Filesystem.Root(), plumbing.Revision("v1.0.0"))
-		require.Contains(t, versions.SemVer, "v1.0.0")
 	})
 }

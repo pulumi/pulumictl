@@ -3,12 +3,16 @@ package gitversion
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
+	"os"
+
+	"github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 
 	"github.com/go-git/go-billy/v5"
-	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/storage/memory"
 )
 
 var testSignature = &object.Signature{
@@ -17,9 +21,17 @@ var testSignature = &object.Signature{
 }
 
 func testRepoCreate() (*git.Repository, error) {
-	workDir := memfs.New()
 
-	repo, err := git.Init(memory.NewStorage(), workDir)
+	//workDir := memfs.New()
+	workDir, err := ioutil.TempDir(os.TempDir(), "test-repo")
+	if err != nil {
+		return nil, fmt.Errorf("Error creating tempdir: #{err}")
+	}
+
+	fs := osfs.New(workDir)
+	st := filesystem.NewStorage(fs, cache.NewObjectLRUDefault())
+
+	repo, err := git.Init(st, fs)
 
 	if err != nil {
 		return nil, fmt.Errorf("git init: %w", err)
