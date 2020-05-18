@@ -16,10 +16,10 @@ import (
 
 // LanguageVersions contains a generic semantic version and Python-specific version number.
 type LanguageVersions struct {
-	SemVer string
-	Python string
+	SemVer     string
+	Python     string
 	JavaScript string
-	DotNet string
+	DotNet     string
 }
 
 // GetLanguageVersions calculates the generic and Python-specific version numbers for the
@@ -42,7 +42,6 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 			{VersionStr: strconv.FormatInt(versionComponents.Timestamp.UTC().Unix(), 10)},
 		}
 	}
-
 
 	// a standard semantic version
 	preVersion := ""
@@ -70,7 +69,7 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 	// Detect if the git worktree is dirty, and add `.dirty` to the version if it is
 	if versionComponents.Dirty {
 		preVersion = fmt.Sprintf("%s.dirty", preVersion)
-		pythonPreVersion = fmt.Sprintf("%s.dirty", pythonPreVersion)
+		pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
 	}
 
 	// a base version with the pre release info
@@ -83,10 +82,10 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 	dotnetVersion := version
 
 	return &LanguageVersions{
-		SemVer: version,
-		Python: pythonVersion,
+		SemVer:     version,
+		Python:     pythonVersion,
 		JavaScript: jsVersion,
-		DotNet: dotnetVersion,
+		DotNet:     dotnetVersion,
 	}, nil
 }
 

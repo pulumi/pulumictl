@@ -11,4 +11,5 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.5.1
+	golang.org/x/tools v0.0.0-20200518203908-8018eb2c26ba // indirect
 )
