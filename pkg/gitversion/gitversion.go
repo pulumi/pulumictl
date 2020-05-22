@@ -66,10 +66,15 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 		}
 	}
 
-	// Detect if the git worktree is dirty, and add `.dirty` to the version if it is
+	// Detect if the git worktree is dirty, and add `dirty` to the version if it is
 	if versionComponents.Dirty {
-		preVersion = fmt.Sprintf("%s.dirty", preVersion)
-		pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
+		if versionComponents.IsExact {
+			preVersion = fmt.Sprintf("%s+dirty", preVersion)
+			pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
+		} else {
+			preVersion = fmt.Sprintf("%s.dirty", preVersion)
+			pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
+		}
 	}
 
 	// a base version with the pre release info
@@ -95,6 +100,7 @@ type versionComponents struct {
 	Dirty     bool
 	ShortHash string
 	Timestamp time.Time
+	IsExact   bool
 }
 
 // versionAtCommitForRepo determines the version components on which the language-specific variants
@@ -148,6 +154,7 @@ func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision) 
 		Dirty:     isDirty,
 		ShortHash: revision.String()[:8],
 		Timestamp: commit.Committer.When,
+		IsExact:   isExact,
 	}, nil
 }
 
