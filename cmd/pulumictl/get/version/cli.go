@@ -6,10 +6,9 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"github.com/pulumi/pulumictl/pkg/gitversion"
 )
 
 var (
@@ -18,7 +17,7 @@ var (
 
 func Command() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "get-version",
+		Use:   "version",
 		Short: "Calculate versions",
 		Long:  "Calculate a package version from repository tags and state",
 		Args:  cobra.MaximumNArgs(1),
