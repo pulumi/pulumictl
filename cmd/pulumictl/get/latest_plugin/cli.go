@@ -3,6 +3,7 @@ package latest_plugin
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/pulumi/pulumictl/pkg/pluginversion"
 
@@ -44,7 +45,7 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			fmt.Println(result)
+			fmt.Println(strings.TrimPrefix(result, "v"))
 
 			return nil
 		},
