@@ -6,14 +6,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/spf13/viper"
-
-	"golang.org/x/oauth2"
-
-	"github.com/pulumi/pulumictl/pkg/pluginversion"
-
 	"github.com/google/go-github/github"
+	"github.com/pulumi/pulumictl/pkg/pluginversion"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"golang.org/x/oauth2"
 )
 
 var (
