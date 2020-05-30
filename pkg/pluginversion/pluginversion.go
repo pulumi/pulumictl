@@ -17,7 +17,7 @@ func CheckPluginTags(project string, versions []string) (string, error) {
 		if success {
 			return version, nil
 		}
-		// If we're at the end of out loop, we should bail and throw an error
+		// If we're at the end of out loop, we should bail and throw the last error
 		if i == len(versions) {
 			return "", err
 		}
@@ -37,11 +37,19 @@ func CheckPluginExists(project string, version string) (bool, error) {
 	// FIXME: would be nice if we could use `HEAD` here
 	resp, err := http.Get(pluginUrl)
 
-	if resp.StatusCode == http.StatusOK {
-		return true, nil
+	// We got an error, bail
+	if err != nil {
+		return false, err
 	}
+
+	// Not found, there's no plugin yet
 	if resp.StatusCode == http.StatusNotFound {
 		return false, nil
+	}
+
+	// We got a 2xx response code
+	if resp.StatusCode == http.StatusOK {
+		return true, nil
 	}
 
 	return false, err
