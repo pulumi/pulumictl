@@ -35,7 +35,7 @@ func Command() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "docs-build [provider] [tag]",
 		Short: "Create a docs build",
-		Long:  `Send a repository dispatch webhook to the docs repo`,
+		Long:  `Send a repository dispatch payload to the docs repo`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
