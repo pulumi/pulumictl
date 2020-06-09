@@ -102,8 +102,8 @@ func Command() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringP("org", "o", "pulumi", "the GitHub organization to send to the dispatch")
-	command.Flags().StringP("docs-repo", "d", "pulumi/docs", "the docs repository to send the payload")
+	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
+	command.Flags().StringP("docs-repo", "d", "pulumi/docs", "the docs repository to send in the payload")
 	command.Flags().StringP("event-type", "e", "tfgen-provider", "the event type to send to the dispatch")
 	viper.BindEnv("org", "GITHUB_ORG")
 	viper.BindEnv("docs-repo", "GITHUB_DOCS_REPO")
