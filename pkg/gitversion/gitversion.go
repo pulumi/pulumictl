@@ -180,7 +180,7 @@ func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash) (string
 		return "", false, fmt.Errorf("isExactTag: %w", err)
 	}
 	if isExact {
-		return stripModuleTagPrefixes(exactMatch.Name().Short()), true, nil
+		return StripModuleTagPrefixes(exactMatch.Name().Short()), true, nil
 	}
 
 	// If not, find the most recent tag
@@ -189,7 +189,7 @@ func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash) (string
 		return "", false, fmt.Errorf("mostRecentTag: %w", err)
 	}
 	if hasRecent {
-		return stripModuleTagPrefixes(recentMatch.Name().Short()), false, nil
+		return StripModuleTagPrefixes(recentMatch.Name().Short()), false, nil
 	}
 
 	// Fallback if we don't have anything
@@ -199,7 +199,7 @@ func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash) (string
 // stripModuleTagPrefixes returns the last component of a path. This is used to
 // resolve the tag format used in pulumi repos of "module/versionComponents" to a simple
 // versionComponents.
-func stripModuleTagPrefixes(tag string) string {
+func StripModuleTagPrefixes(tag string) string {
 	_, versionComponent := path.Split(tag)
 	return strings.TrimPrefix(versionComponent, "v")
 }
