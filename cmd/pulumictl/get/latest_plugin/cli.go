@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v32/github"
 	"github.com/pulumi/pulumictl/pkg/pluginversion"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -67,10 +67,6 @@ func Command() *cobra.Command {
 
 	command.Flags().StringP("org", "o", "pulumi", "the GitHub organization where the plugin lives.")
 	command.Flags().IntP("num-tags", "n", 3, "The number of tags back from the latest to check for plugin versions.")
-	command.Flags().StringVarP(&githubToken, "token", "t", "", "a github token to use for making API calls.")
-
-	viper.BindEnv("token", "GITHUB_TOKEN")
-	viper.BindPFlag("token", command.Flags().Lookup("token"))
 
 	return command
 }
