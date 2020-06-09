@@ -7,9 +7,9 @@ import (
 )
 
 func TestStripModuleTagPrefixes(t *testing.T) {
-	require.Equal(t, "0.0.0", stripModuleTagPrefixes("v0.0.0"))
-	require.Equal(t, "2.1.0", stripModuleTagPrefixes("sdk/v2.1.0"))
-	require.Equal(t, "2.1.0", stripModuleTagPrefixes("sdk/nodejs/v2.1.0"))
+	require.Equal(t, "0.0.0", StripModuleTagPrefixes("v0.0.0"))
+	require.Equal(t, "2.1.0", StripModuleTagPrefixes("sdk/v2.1.0"))
+	require.Equal(t, "2.1.0", StripModuleTagPrefixes("sdk/nodejs/v2.1.0"))
 }
 
 func TestMostRecentTag(t *testing.T) {
