@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"github.com/blang/semver"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -258,6 +260,9 @@ func mostRecentTag(repo *git.Repository, ref plumbing.Hash) (bool, *plumbing.Ref
 // workTreeIsDirty returns whether the worktree associated with the given repository
 // has local modifications.
 func workTreeIsDirty(repo *git.Repository) (bool, error) {
+
+	debug := viper.GetBool("debug")
+
 	worktree, err := repo.Worktree()
 	if err != nil {
 		return false, fmt.Errorf("error getting git worktree: %w", err)
@@ -266,6 +271,10 @@ func workTreeIsDirty(repo *git.Repository) (bool, error) {
 	status, err := worktree.Status()
 	if err != nil {
 		return false, fmt.Errorf("error getting git worktree status: %w", err)
+	}
+
+	if debug {
+		fmt.Println(status)
 	}
 
 	return !status.IsClean(), nil

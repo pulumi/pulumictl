@@ -17,6 +17,7 @@ import (
 
 var (
 	githubToken string
+	debug       bool
 )
 
 func configureCLI() *cobra.Command {
@@ -30,8 +31,10 @@ func configureCLI() *cobra.Command {
 	rootCommand.AddCommand(version.Command())
 
 	rootCommand.PersistentFlags().StringVarP(&githubToken, "token", "t", "", "a github token to use for making API calls to GitHub.")
+	rootCommand.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "enable debug logging")
+	viper.BindEnv("debug", "PULUMICTL_DEBUG")
 	viper.BindEnv("token", "GITHUB_TOKEN")
-	viper.BindPFlag("token", rootCommand.PersistentFlags().Lookup("token"))
+	viper.BindPFlag("debug", rootCommand.PersistentFlags().Lookup("debug"))
 
 	return rootCommand
 }
