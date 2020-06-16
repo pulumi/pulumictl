@@ -1,6 +1,7 @@
 package create
 
 import (
+	"github.com/pulumi/pulumictl/cmd/pulumictl/create/containers"
 	docsbuild "github.com/pulumi/pulumictl/cmd/pulumictl/create/docs-build"
 	"github.com/spf13/cobra"
 )
@@ -13,6 +14,7 @@ func Command() *cobra.Command {
 	}
 
 	command.AddCommand(docsbuild.Command())
+	command.AddCommand(containers.Command())
 
 	return command
 }
