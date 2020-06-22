@@ -31,6 +31,8 @@ type Payload struct {
 	Ref              string `json:"ref"`
 }
 
+const eventType = "tfgen-provider"
+
 func Command() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "docs-build [provider] [tag]",
@@ -44,7 +46,6 @@ func Command() *cobra.Command {
 			org = viper.GetString("org")
 			ref = viper.GetString("ref")
 			docsRepo := viper.GetString("docs-repo")
-			eventType := viper.GetString("event-type")
 			project := args[0]
 			ref := args[1]
 
@@ -104,13 +105,11 @@ func Command() *cobra.Command {
 
 	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
 	command.Flags().StringP("docs-repo", "d", "pulumi/docs", "the docs repository to send in the payload")
-	command.Flags().StringP("event-type", "e", "tfgen-provider", "the event type to send to the dispatch")
+
 	viper.BindEnv("org", "GITHUB_ORG")
 	viper.BindEnv("docs-repo", "GITHUB_DOCS_REPO")
-	viper.BindEnv("event-type", "GITHUB_EVENT_TYPE")
 	viper.BindPFlag("org", command.Flags().Lookup("org"))
 	viper.BindPFlag("docs-repo", command.Flags().Lookup("docs-repo"))
-	viper.BindPFlag("event-type", command.Flags().Lookup("event-type"))
 
 	return command
 }
