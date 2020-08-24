@@ -27,7 +27,7 @@ type LanguageVersions struct {
 // GetLanguageVersions calculates the generic and Python-specific version numbers for the
 // given `commitish` based on the most recent tag, the status of the work tree with respect
 // to dirty files, and a timestamp.
-func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*LanguageVersions, error) {
+func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omitCommitHash bool) (*LanguageVersions, error) {
 	versionComponents, err := versionAtCommitForRepo(workingDirPath, commitish)
 	if err != nil {
 		return nil, err
@@ -45,6 +45,14 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 		}
 	}
 
+	// Check the shorthash
+	var shortHash string
+	if omitCommitHash {
+		shortHash = ""
+	} else {
+		shortHash = fmt.Sprintf("+%s", versionComponents.ShortHash)
+	}
+
 	// a standard semantic version
 	preVersion := ""
 	// Python uses PEP440, but Pypi has some curiosities.
@@ -53,16 +61,16 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision) (*L
 		switch genericVersion.Pre[0].VersionStr {
 		case "dev":
 			pythonPreVersion = fmt.Sprintf("dev%d", versionComponents.Timestamp.UTC().Unix())
-			preVersion = fmt.Sprintf("-dev.%d+%s", versionComponents.Timestamp.UTC().Unix(), versionComponents.ShortHash)
+			preVersion = fmt.Sprintf("-dev.%d%s", versionComponents.Timestamp.UTC().Unix(), shortHash)
 		case "alpha":
 			pythonPreVersion = fmt.Sprintf("a%d", versionComponents.Timestamp.UTC().Unix())
-			preVersion = fmt.Sprintf("-alpha.%d+%s", versionComponents.Timestamp.UTC().Unix(), versionComponents.ShortHash)
+			preVersion = fmt.Sprintf("-alpha.%d%s", versionComponents.Timestamp.UTC().Unix(), shortHash)
 		case "beta":
 			pythonPreVersion = fmt.Sprintf("b%d", versionComponents.Timestamp.UTC().Unix())
-			preVersion = fmt.Sprintf("-beta.%d+%s", versionComponents.Timestamp.UTC().Unix(), versionComponents.ShortHash)
+			preVersion = fmt.Sprintf("-beta.%d%s", versionComponents.Timestamp.UTC().Unix(), shortHash)
 		case "rc":
 			pythonPreVersion = fmt.Sprintf("rc%d", versionComponents.Timestamp.UTC().Unix())
-			preVersion = fmt.Sprintf("-rc.%d+%s", versionComponents.Timestamp.UTC().Unix(), versionComponents.ShortHash)
+			preVersion = fmt.Sprintf("-rc.%d%s", versionComponents.Timestamp.UTC().Unix(), shortHash)
 		default:
 			return nil, fmt.Errorf("prerelease string %q not valid semver string", genericVersion.Pre[0].VersionStr)
 		}
