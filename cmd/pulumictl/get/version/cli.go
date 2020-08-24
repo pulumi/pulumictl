@@ -13,6 +13,7 @@ import (
 
 var (
 	language string
+	omitCommitHash bool
 )
 
 func Command() *cobra.Command {
@@ -44,7 +45,7 @@ func Command() *cobra.Command {
 
 			language = viper.GetString("language")
 
-			versions, err := gitversion.GetLanguageVersions(repo, plumbing.Revision(commitish))
+			versions, err := gitversion.GetLanguageVersions(repo, plumbing.Revision(commitish), omitCommitHash)
 			if err != nil {
 				return fmt.Errorf("error calculating version: %w", err)
 			}
@@ -69,6 +70,7 @@ func Command() *cobra.Command {
 
 	command.Flags().StringP("repo", "r", "", "path to repository, defaults to current working directory")
 	command.Flags().StringVarP(&language, "language", "p", "", "the platform for which the version should be output.")
+	command.Flags().BoolVarP(&omitCommitHash, "omit-commit-hash", "o", false, "whether to include or omit the commit hash in the version")
 	viper.SetDefault("language", "generic")
 	viper.BindEnv("language", "PULUMI_LANGUAGE")
 	viper.BindPFlag("language", command.Flags().Lookup("language"))
