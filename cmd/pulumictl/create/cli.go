@@ -1,6 +1,7 @@
 package create
 
 import (
+	"github.com/pulumi/pulumictl/cmd/pulumictl/create/azure"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/create/chocolatey"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/create/containers"
 	docsbuild "github.com/pulumi/pulumictl/cmd/pulumictl/create/docs-build"
@@ -19,6 +20,7 @@ func Command() *cobra.Command {
 	command.AddCommand(containers.Command())
 	command.AddCommand(chocolatey.Command())
 	command.AddCommand(homebrew.Command())
+	command.AddCommand(azure.Command())
 
 	return command
 }
