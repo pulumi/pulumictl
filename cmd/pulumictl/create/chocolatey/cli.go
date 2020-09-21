@@ -20,6 +20,7 @@ var (
 	repo        string
 	ref         string
 	tokenClient *http.Client
+	app         string
 )
 
 type Payload struct {
@@ -43,6 +44,8 @@ func Command() *cobra.Command {
 			containerRepo := "pulumi/pulumi-chocolatey"
 			ref := args[0]
 
+			app = viper.GetString("app")
+
 			// perform some string manipulation and validation
 			containerRepoArray := strings.Split(containerRepo, "/")
 
@@ -52,7 +55,6 @@ func Command() *cobra.Command {
 			}
 
 			_, err := semver.Parse(gitversion.StripModuleTagPrefixes(ref))
-
 			if err != nil {
 				return fmt.Errorf("must specify a valid semver ref - value: %s\n", ref)
 			}
@@ -70,12 +72,19 @@ func Command() *cobra.Command {
 			}
 			payload := json.RawMessage(jsonPayload)
 
+			var eventTriggerType string
+			if app != "" {
+				eventTriggerType = fmt.Sprintf("choco-deploy-%s", app)
+			} else {
+				eventTriggerType = eventType
+			}
+
 			// create the repository dispatch event
 			_, _, err = client.Repositories.Dispatch(ctx,
 				containerRepoArray[0],
 				containerRepoArray[1],
 				github.DispatchRequestOptions{
-					EventType:     eventType,
+					EventType:     eventTriggerType,
 					ClientPayload: &payload,
 				})
 
@@ -93,9 +102,11 @@ func Command() *cobra.Command {
 	}
 
 	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
+	command.Flags().StringP("app", "a", "", "The name of the chocolatey application to deploy")
 
 	viper.BindEnv("org", "GITHUB_ORG")
 	viper.BindPFlag("org", command.Flags().Lookup("org"))
+	viper.BindPFlag("app", command.Flags().Lookup("app"))
 
 	return command
 }
