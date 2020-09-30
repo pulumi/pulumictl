@@ -1,6 +1,8 @@
 package gitversion
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,7 +16,9 @@ func TestStripModuleTagPrefixes(t *testing.T) {
 
 func TestMostRecentTag(t *testing.T) {
 	t.Run("Repo with commit after tag", func(t *testing.T) {
-		repo, err := testRepoSingleCommitPastRelease()
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+		repo, err = testRepoSingleCommitPastRelease(repo)
 		require.NoError(t, err)
 		require.NotNil(t, repo)
 
@@ -30,7 +34,9 @@ func TestMostRecentTag(t *testing.T) {
 	})
 
 	t.Run("Repo with no tags", func(t *testing.T) {
-		repo, err := testRepoSingleCommit()
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+		repo, err = testRepoSingleCommit(repo)
 		require.NoError(t, err)
 		require.NotNil(t, repo)
 
@@ -47,7 +53,9 @@ func TestMostRecentTag(t *testing.T) {
 }
 
 func TestIsExactTag(t *testing.T) {
-	repo, err := testRepoSingleCommitPastRelease()
+	repo, err := testRepoCreate()
+	require.NoError(t, err)
+	repo, err = testRepoSingleCommitPastRelease(repo)
 	require.NoError(t, err)
 	require.NotNil(t, repo)
 
@@ -75,7 +83,14 @@ func TestIsExactTag(t *testing.T) {
 }
 
 func TestIsWorktreeDirty(t *testing.T) {
-	repo, err := testRepoSingleCommit()
+	dir, err := ioutil.TempDir("", "worktree")
+	require.NoError(t, err)
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+	repo, err := testRepoFSCreate(dir)
+	require.NoError(t, err)
+	repo, err = testRepoSingleCommit(repo)
 	require.NoError(t, err)
 	require.NotNil(t, repo)
 
