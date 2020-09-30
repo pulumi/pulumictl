@@ -3,11 +3,14 @@ package gitversion
 import (
 	"bufio"
 	"fmt"
+	"path/filepath"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 
@@ -28,12 +31,14 @@ func testRepoCreate() (*git.Repository, error) {
 	return repo, nil
 }
 
-func testRepoSingleCommitPastRelease() (*git.Repository, error) {
-	repo, err := testRepoCreate()
-	if err != nil {
-		return nil, fmt.Errorf("repo create: %w", err)
-	}
+func testRepoFSCreate(baseDir string) (*git.Repository, error) {
+	gitDir := osfs.New(filepath.Join(baseDir, ".git"))
+	return git.Init(filesystem.NewStorageWithOptions(gitDir, nil, filesystem.Options{
+		ExclusiveAccess: true,
+	}), osfs.New(baseDir))
+}
 
+func testRepoSingleCommitPastRelease(repo *git.Repository) (*git.Repository, error) {
 	workTree, err := repo.Worktree()
 	if err != nil {
 		return nil, fmt.Errorf("worktree: %w", err)
@@ -68,12 +73,7 @@ func testRepoSingleCommitPastRelease() (*git.Repository, error) {
 	return repo, nil
 }
 
-func testRepoSingleCommit() (*git.Repository, error) {
-	repo, err := testRepoCreate()
-	if err != nil {
-		return nil, fmt.Errorf("repo create: %w", err)
-	}
-
+func testRepoSingleCommit(repo *git.Repository) (*git.Repository, error) {
 	workTree, err := repo.Worktree()
 	if err != nil {
 		return nil, fmt.Errorf("worktree: %w", err)
@@ -105,7 +105,7 @@ func writeFile(workDir billy.Filesystem, fileName string, content string) error 
 	}()
 
 	writer := bufio.NewWriter(file)
-	if _, err = writer.WriteString("Hello World"); err != nil {
+	if _, err = writer.WriteString(content); err != nil {
 		return fmt.Errorf("write: %w", err)
 	}
 

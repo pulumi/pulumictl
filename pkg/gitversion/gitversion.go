@@ -2,6 +2,7 @@ package gitversion
 
 import (
 	"fmt"
+	"os/exec"
 	"path"
 	"strconv"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 )
 
 // LanguageVersions contains a generic semantic version and Python-specific version number.
@@ -268,22 +270,36 @@ func mostRecentTag(repo *git.Repository, ref plumbing.Hash) (bool, *plumbing.Ref
 // workTreeIsDirty returns whether the worktree associated with the given repository
 // has local modifications.
 func workTreeIsDirty(repo *git.Repository) (bool, error) {
-
 	debug := viper.GetBool("debug")
-
-	worktree, err := repo.Worktree()
+	workTree, err := repo.Worktree()
 	if err != nil {
-		return false, fmt.Errorf("error getting git worktree: %w", err)
+		return false, err
 	}
 
-	status, err := worktree.Status()
+	if _, ok := repo.Storer.(*filesystem.Storage); !ok {
+		status, err := workTree.Status()
+		if err != nil {
+			return false, fmt.Errorf("error getting git worktree status: %w", err)
+		}
+		if debug {
+			fmt.Println(status)
+		}
+		return !status.IsClean(), err
+	}
+
+	// Fast-path if the underlying filesystem is on disk since Status is really slow
+	// on larger repositories.
+	c := exec.Command("git", "status", "--porcelain")
+	c.Dir = workTree.Filesystem.Root()
+	output, err := c.Output()
 	if err != nil {
-		return false, fmt.Errorf("error getting git worktree status: %w", err)
+		if ee, ok := err.(*exec.ExitError); ok {
+			if debug {
+				fmt.Println(string(ee.Stderr))
+			}
+			return true, nil
+		}
+		return false, err
 	}
-
-	if debug {
-		fmt.Println(status)
-	}
-
-	return !status.IsClean(), nil
+	return len(output) > 0, nil
 }
