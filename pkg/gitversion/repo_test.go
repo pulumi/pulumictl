@@ -44,22 +44,38 @@ func testRepoSingleCommitPastRelease(repo *git.Repository) (*git.Repository, err
 		return nil, fmt.Errorf("worktree: %w", err)
 	}
 
+	// alpha tag
 	workDir := workTree.Filesystem
+	if err := writeFile(workDir, "hello-world.alpha", "Hello World"); err != nil {
+		return nil, fmt.Errorf("writeFile: %w", err)
+	}
+	if _, err := workTree.Add("hello-world.alpha"); err != nil {
+		return nil, fmt.Errorf("worktree-add: %w", err)
+	}
+	alphaCommitHash, err := workTree.Commit("Initial Commit!", &git.CommitOptions{Author: testSignature})
+	if err != nil {
+		return nil, fmt.Errorf("commit: %w", err)
+	}
+	if _, err := repo.CreateTag("v1.0.0-alpha.1", alphaCommitHash, nil); err != nil {
+		return nil, fmt.Errorf("tag: %w", err)
+	}
+
+	// v1.0.0 tag
 	if err := writeFile(workDir, "hello-world", "Hello World"); err != nil {
 		return nil, fmt.Errorf("writeFile: %w", err)
 	}
 	if _, err := workTree.Add("hello-world"); err != nil {
 		return nil, fmt.Errorf("worktree-add: %w", err)
 	}
-
-	commitHash, err := workTree.Commit("Initial Commit!", &git.CommitOptions{Author: testSignature})
+	tagCommitHash, err := workTree.Commit("Initial Commit!", &git.CommitOptions{Author: testSignature})
 	if err != nil {
 		return nil, fmt.Errorf("commit: %w", err)
 	}
-	if _, err := repo.CreateTag("v1.0.0", commitHash, nil); err != nil {
+	if _, err := repo.CreateTag("v1.0.0", tagCommitHash, nil); err != nil {
 		return nil, fmt.Errorf("tag: %w", err)
 	}
 
+	// commit after taf
 	if err := writeFile(workDir, "hello-world2", "Hello World 2"); err != nil {
 		return nil, fmt.Errorf("writeFile: %w", err)
 	}
