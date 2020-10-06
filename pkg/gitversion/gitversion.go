@@ -40,10 +40,16 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omi
 	genericVersion.Major = versionComponents.Semver.Major
 	genericVersion.Minor = versionComponents.Semver.Minor
 	genericVersion.Patch = versionComponents.Semver.Patch
-	if len(versionComponents.Semver.Pre) != 0 {
+	if len(versionComponents.Semver.Pre) == 1 {
 		genericVersion.Pre = []semver.PRVersion{
 			versionComponents.Semver.Pre[0],
 			{VersionStr: strconv.FormatInt(versionComponents.Timestamp.UTC().Unix(), 10)},
+		}
+	}
+	if len(versionComponents.Semver.Pre) > 1 {
+		genericVersion.Pre = []semver.PRVersion{
+			versionComponents.Semver.Pre[0],
+			versionComponents.Semver.Pre[1],
 		}
 	}
 
@@ -60,19 +66,27 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omi
 	// Python uses PEP440, but Pypi has some curiosities.
 	pythonPreVersion := ""
 	if len(genericVersion.Pre) != 0 {
+		var preSuffix int64
+
+		if ! versionComponents.IsExact {
+			preSuffix = versionComponents.Timestamp.UTC().Unix()
+		} else {
+			preSuffix = int64(versionComponents.Semver.Pre[1].VersionNum)
+		}
+
 		switch genericVersion.Pre[0].VersionStr {
 		case "dev":
-			pythonPreVersion = fmt.Sprintf("dev%d", versionComponents.Timestamp.UTC().Unix())
-			preVersion = fmt.Sprintf("-dev.%d%s", versionComponents.Timestamp.UTC().Unix(), shortHash)
+			pythonPreVersion = fmt.Sprintf("dev%d", preSuffix)
+			preVersion = fmt.Sprintf("-dev.%d%s", preSuffix, shortHash)
 		case "alpha":
-			pythonPreVersion = fmt.Sprintf("a%d", versionComponents.Timestamp.UTC().Unix())
-			preVersion = fmt.Sprintf("-alpha.%d%s", versionComponents.Timestamp.UTC().Unix(), shortHash)
+			pythonPreVersion = fmt.Sprintf("a%d", preSuffix)
+			preVersion = fmt.Sprintf("-alpha.%d%s", preSuffix, shortHash)
 		case "beta":
-			pythonPreVersion = fmt.Sprintf("b%d", versionComponents.Timestamp.UTC().Unix())
-			preVersion = fmt.Sprintf("-beta.%d%s", versionComponents.Timestamp.UTC().Unix(), shortHash)
+			pythonPreVersion = fmt.Sprintf("b%d", preSuffix)
+			preVersion = fmt.Sprintf("-beta.%d%s", preSuffix, shortHash)
 		case "rc":
-			pythonPreVersion = fmt.Sprintf("rc%d", versionComponents.Timestamp.UTC().Unix())
-			preVersion = fmt.Sprintf("-rc.%d%s", versionComponents.Timestamp.UTC().Unix(), shortHash)
+			pythonPreVersion = fmt.Sprintf("rc%d", preSuffix)
+			preVersion = fmt.Sprintf("-rc.%d%s", preSuffix, shortHash)
 		default:
 			return nil, fmt.Errorf("prerelease string %q not valid semver string", genericVersion.Pre[0].VersionStr)
 		}
