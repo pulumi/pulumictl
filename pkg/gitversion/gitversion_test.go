@@ -70,6 +70,17 @@ func TestIsExactTag(t *testing.T) {
 		require.False(t, isExact)
 	})
 
+	t.Run("With exact tag - prerelease", func(t *testing.T) {
+		exactRef, err := repo.Tag("v1.0.0-alpha.1")
+		require.NoError(t, err)
+		require.NotNil(t, exactRef)
+
+		isExact, exact, err := isExactTag(repo, exactRef.Hash())
+		require.NoError(t, err)
+		require.NotNil(t, exact)
+		require.True(t, isExact)
+	})
+
 	t.Run("With exact tag", func(t *testing.T) {
 		exactRef, err := repo.Tag("v1.0.0")
 		require.NoError(t, err)
