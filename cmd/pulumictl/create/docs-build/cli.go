@@ -50,7 +50,11 @@ func Command() *cobra.Command {
 			ref := args[1]
 
 			// perform some string manipulation and validation
-			shortName := strings.Split(project, "-")[1]
+			// this manipulation will allow us to handle providers
+			// such as pulumi-equinix-metal and pulumi-azure-nextgen
+			parts := strings.Split(project, "-")
+			parts = append(parts[:0], parts[1:]...)
+			shortName := strings.Join(parts, "-")
 			docsRepoArray := strings.Split(docsRepo, "/")
 
 			// if the string split doesn't return 2 values, it's probably not right
