@@ -13,6 +13,7 @@ import (
 
 var (
 	language string
+	versionPrefix string
 	omitCommitHash bool
 )
 
@@ -44,8 +45,10 @@ func Command() *cobra.Command {
 			}
 
 			language = viper.GetString("language")
+			versionPrefix = viper.GetString("version-prefix")
 
-			versions, err := gitversion.GetLanguageVersions(repo, plumbing.Revision(commitish), omitCommitHash)
+			versions, err := gitversion.GetLanguageVersions(repo, plumbing.Revision(commitish),
+				omitCommitHash, versionPrefix)
 			if err != nil {
 				return fmt.Errorf("error calculating version: %w", err)
 			}
@@ -70,10 +73,15 @@ func Command() *cobra.Command {
 
 	command.Flags().StringP("repo", "r", "", "path to repository, defaults to current working directory")
 	command.Flags().StringVarP(&language, "language", "p", "", "the platform for which the version should be output.")
+	command.Flags().StringVar(&versionPrefix, "version-prefix", "", "the version prefix (e.g. 3.0.0). Must be valid semver.")
 	command.Flags().BoolVarP(&omitCommitHash, "omit-commit-hash", "o", false, "whether to include or omit the commit hash in the version")
+
 	viper.SetDefault("language", "generic")
 	viper.BindEnv("language", "PULUMI_LANGUAGE")
 	viper.BindPFlag("language", command.Flags().Lookup("language"))
+
+	viper.BindEnv("version-prefix", "VERSION_PREFIX")
+	viper.BindPFlag("version-prefix", command.Flags().Lookup("version-prefix"))
 
 	return command
 }
