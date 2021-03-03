@@ -29,8 +29,9 @@ type LanguageVersions struct {
 // GetLanguageVersions calculates the generic and Python-specific version numbers for the
 // given `commitish` based on the most recent tag, the status of the work tree with respect
 // to dirty files, and a timestamp.
-func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omitCommitHash bool) (*LanguageVersions, error) {
-	versionComponents, err := versionAtCommitForRepo(workingDirPath, commitish)
+func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omitCommitHash bool,
+	releasePrefix string) (*LanguageVersions, error) {
+	versionComponents, err := versionAtCommitForRepo(workingDirPath, commitish, releasePrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +132,7 @@ type versionComponents struct {
 
 // versionAtCommitForRepo determines the version components on which the language-specific variants
 // are calculated from.
-func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision) (*versionComponents, error) {
+func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision, releasePrefix string) (*versionComponents, error) {
 	// Open repository
 	repo, err := git.PlainOpen(workingDirPath)
 	if err != nil {
@@ -168,6 +169,17 @@ func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision) 
 		version.Pre = []semver.PRVersion{
 			{VersionStr: "alpha"},
 		}
+	}
+
+	if releasePrefix != "" {
+		newVersion, err := semver.Parse(releasePrefix)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing releasePrefix override %q: %w", releasePrefix, err)
+		}
+
+		version.Major = newVersion.Major
+		version.Minor = newVersion.Minor
+		version.Patch = newVersion.Patch
 	}
 
 	isDirty, err := workTreeIsDirty(repo)

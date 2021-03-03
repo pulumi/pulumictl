@@ -25,7 +25,7 @@ func Command() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("error obtaining working directory: %w", err)
 				}
-				version, err := gitversion.GetLanguageVersions(workingDir, plumbing.Revision(commitish), true)
+				version, err := gitversion.GetLanguageVersions(workingDir, plumbing.Revision(commitish), true, "")
 				if err != nil {
 					return fmt.Errorf("error calculating version: %w", err)
 				}
