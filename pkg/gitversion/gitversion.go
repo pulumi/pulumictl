@@ -315,7 +315,7 @@ func workTreeIsDirty(repo *git.Repository) (bool, error) {
 
 	// Fast-path if the underlying filesystem is on disk since Status is really slow
 	// on larger repositories.
-	c := exec.Command("git", "status", "--porcelain")
+	c := exec.Command("git", "diff-files", "--name-status", "--ignore-space-at-eol")
 	c.Dir = workTree.Filesystem.Root()
 	output, err := c.Output()
 	if err != nil {

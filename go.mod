@@ -3,10 +3,9 @@ module github.com/pulumi/pulumictl
 go 1.14
 
 require (
-	github.com/acidlemon/go-dumper v0.0.0-20140703092420-30d2ddcbd5c4
 	github.com/blang/semver v1.1.1-0.20190414182527-1a9109f8c4a1
 	github.com/go-git/go-billy/v5 v5.0.0
-	github.com/go-git/go-git/v5 v5.0.0
+	github.com/go-git/go-git/v5 v5.2.0
 	github.com/google/go-github/v32 v32.0.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.4.0
