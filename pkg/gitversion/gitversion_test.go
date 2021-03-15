@@ -120,7 +120,7 @@ func TestIsWorktreeDirty(t *testing.T) {
 	workDir := worktree.Filesystem
 
 	// Write a file but don't commit it
-	if err := writeFile(workDir, "foo", "bar"); err != nil {
+	if err := writeFile(workDir, "hello-world", "Hello World 2"); err != nil {
 		t.Errorf("writeFile: %w", err)
 	}
 

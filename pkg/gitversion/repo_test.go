@@ -125,5 +125,9 @@ func writeFile(workDir billy.Filesystem, fileName string, content string) error 
 		return fmt.Errorf("write: %w", err)
 	}
 
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("flush: %w", err)
+	}
+
 	return nil
 }

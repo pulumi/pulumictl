@@ -69,7 +69,7 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omi
 	if len(genericVersion.Pre) != 0 {
 		var preSuffix int64
 
-		if ! versionComponents.IsExact {
+		if !versionComponents.IsExact {
 			preSuffix = versionComponents.Timestamp.UTC().Unix()
 		} else {
 			preSuffix = int64(versionComponents.Semver.Pre[1].VersionNum)
@@ -134,7 +134,7 @@ type versionComponents struct {
 // are calculated from.
 func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision, releasePrefix string) (*versionComponents, error) {
 	// Open repository
-	repo, err := git.PlainOpen(workingDirPath)
+	repo, err := git.PlainOpenWithOptions(workingDirPath, &git.PlainOpenOptions{EnableDotGitCommonDir: true})
 	if err != nil {
 		return nil, fmt.Errorf("error opening repository: %w", err)
 	}

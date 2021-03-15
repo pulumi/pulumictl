@@ -1,6 +1,6 @@
 module github.com/pulumi/pulumictl
 
-go 1.14
+go 1.16
 
 require (
 	github.com/blang/semver v1.1.1-0.20190414182527-1a9109f8c4a1
