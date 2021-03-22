@@ -313,11 +313,29 @@ func workTreeIsDirty(repo *git.Repository) (bool, error) {
 		return !status.IsClean(), err
 	}
 
-	// Fast-path if the underlying filesystem is on disk since Status is really slow
-	// on larger repositories.
-	c := exec.Command("git", "diff-files", "--name-status", "--ignore-space-at-eol")
+	// we need to refresh the index before we try and check diff-files
+	// diff-files doesn't check the contents changing, it only checks
+	// the stat changes so if the file was "touched" in anyway, then diff-files
+	// *could* show it has changed but a git status then git diff-files wouldn't
+	// because git status causes a reindex
+	c := exec.Command("git", "update-index", "--refresh")
 	c.Dir = workTree.Filesystem.Root()
 	output, err := c.Output()
+	if err != nil {
+		if debug {
+			fmt.Println("Error updating git index - forcing isDirty")
+		}
+		return true, err
+	}
+	if debug {
+		fmt.Println(string(output))
+	}
+
+	// Fast-path if the underlying filesystem is on disk since Status is really slow
+	// on larger repositories.
+	c = exec.Command("git", "diff-files", "--name-status", "--ignore-space-at-eol")
+	c.Dir = workTree.Filesystem.Root()
+	output, err = c.Output()
 	if err != nil {
 		if ee, ok := err.(*exec.ExitError); ok {
 			if debug {
@@ -326,6 +344,9 @@ func workTreeIsDirty(repo *git.Repository) (bool, error) {
 			return true, nil
 		}
 		return false, err
+	}
+	if debug {
+		fmt.Println(string(output))
 	}
 	return len(output) > 0, nil
 }
