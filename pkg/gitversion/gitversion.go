@@ -318,11 +318,12 @@ func workTreeIsDirty(repo *git.Repository) (bool, error) {
 	// the stat changes so if the file was "touched" in anyway, then diff-files
 	// *could* show it has changed but a git status then git diff-files wouldn't
 	// because git status causes a reindex
-	c := exec.Command("git", "update-index", "--refresh")
+	c := exec.Command("git", "update-index", "-q", "--refresh")
 	c.Dir = workTree.Filesystem.Root()
 	output, err := c.Output()
 	if err != nil {
 		if debug {
+			fmt.Println(err)
 			fmt.Println("Error updating git index - forcing isDirty")
 		}
 		return true, err
