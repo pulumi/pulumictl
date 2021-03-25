@@ -249,7 +249,7 @@ func (c *checker) isUnlabelled(filename string) (bool, error) {
 
 	scanner := bufio.NewScanner(file)
 
-	var lineNo int = 0
+	lineNo := 0
 
 	for scanner.Scan() {
 		line := scanner.Text()
