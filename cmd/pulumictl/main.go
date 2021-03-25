@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/pulumi/pulumictl/cmd/pulumictl/copyright"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/create"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/dispatch"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/get"
@@ -29,6 +30,7 @@ func configureCLI() *cobra.Command {
 	rootCommand.AddCommand(create.Command())
 	rootCommand.AddCommand(version.Command())
 	rootCommand.AddCommand(dispatch.Command())
+	rootCommand.AddCommand(copyright.Command())
 
 	rootCommand.PersistentFlags().StringVarP(&githubToken, "token", "t", "", "a github token to use for making API calls to GitHub.")
 	rootCommand.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "enable debug logging")
