@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/blang/semver v1.1.1-0.20190414182527-1a9109f8c4a1
+	github.com/bmatcuk/doublestar v1.3.4
 	github.com/go-git/go-billy/v5 v5.0.0
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/google/go-github/v32 v32.0.0
