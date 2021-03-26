@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	dstar "github.com/bmatcuk/doublestar"
 	"github.com/spf13/cobra"
 )
 
@@ -42,12 +43,17 @@ func Command() *cobra.Command {
 				return err
 			}
 
+			exclude, err := cmd.Flags().GetString("exclude")
+			if err != nil {
+				return err
+			}
+
 			parallelism, err := cmd.Flags().GetInt("parallelism")
 			if err != nil {
 				return err
 			}
 
-			c := newChecker(repo, lines, parallelism)
+			c := newChecker(repo, strings.Split(exclude, ","), lines, parallelism)
 
 			if fixup {
 				return c.executeFixup()
@@ -63,12 +69,14 @@ func Command() *cobra.Command {
 	command.Flags().Bool("fixup", false, "edit files to comply")
 	command.Flags().Int("parallelism", 8, "parallelism level to use")
 	command.Flags().Int("lines", 20, "max head lines to scan in each file")
+	command.Flags().StringP("exclude", "x", "", "patterns to exclude from copyright checks (',' seperated)")
 
 	return command
 }
 
 type checker struct {
 	repo                 string
+	exclude              []string
 	sourceFilePattern    *regexp.Regexp
 	copyrightLinePattern *regexp.Regexp
 	copyrightNotice      string
@@ -76,7 +84,7 @@ type checker struct {
 	parallelism          int
 }
 
-func newChecker(repo string, headLineLimit int, parallelism int) *checker {
+func newChecker(repo string, exclude []string, headLineLimit int, parallelism int) *checker {
 	srcP := regexp.MustCompile(`[.](py|ts|cs|go)$`)
 	copyP := regexp.MustCompile(`Copyright (20..-20..|20..), Pulumi Corporation`)
 	copy := fmt.Sprintf("Copyright %d, Pulumi Corporation.  All rights reserved.",
@@ -84,6 +92,7 @@ func newChecker(repo string, headLineLimit int, parallelism int) *checker {
 	return &checker{
 		copyrightNotice:      copy,
 		repo:                 repo,
+		exclude:              exclude,
 		sourceFilePattern:    srcP,
 		copyrightLinePattern: copyP,
 		headLineLimit:        headLineLimit,
@@ -109,7 +118,7 @@ Files missing a Copyright notice:
 			fmt.Printf("%s\n", f)
 		}
 
-		return fmt.Errorf("Found %d source files missing a Copyright notice", len(files))
+		return fmt.Errorf("Found %d source files missing a Copyright notice\n", len(files))
 	} else {
 		return nil
 	}
@@ -189,6 +198,21 @@ func (c *checker) findAllFiles() ([]string, error) {
 	lines := splitLines(string(out))
 	var files []string
 	for _, line := range lines {
+		// Infuriatingly -x in 'git ls-files' only applies to untracked files so
+		// we need to post-filter.
+		var matched bool
+		for _, pattern := range c.exclude {
+			matched, err = dstar.PathMatch(pattern, line)
+			if err != nil {
+				return nil, err
+			}
+			if matched {
+				break
+			}
+		}
+		if matched {
+			continue
+		}
 		files = append(files, filepath.Join(c.repo, line))
 	}
 	return files, nil
