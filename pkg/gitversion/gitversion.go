@@ -33,7 +33,7 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omi
 	releasePrefix string) (*LanguageVersions, error) {
 	versionComponents, err := versionAtCommitForRepo(workingDirPath, commitish, releasePrefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting language versions: %w", err)
 	}
 
 	// For most platforms we use major.minor.patch-prerelease_tag.timestamp
@@ -299,7 +299,7 @@ func workTreeIsDirty(repo *git.Repository) (bool, error) {
 	debug := viper.GetBool("debug")
 	workTree, err := repo.Worktree()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("looking up worktree: %w", err)
 	}
 
 	if _, ok := repo.Storer.(*filesystem.Storage); !ok {
