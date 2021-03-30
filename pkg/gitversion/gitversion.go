@@ -326,7 +326,7 @@ func workTreeIsDirty(repo *git.Repository) (bool, error) {
 			fmt.Println(err)
 			fmt.Println("Error updating git index - forcing isDirty")
 		}
-		return true, err
+		return true, nil
 	}
 	if debug {
 		fmt.Println(string(output))

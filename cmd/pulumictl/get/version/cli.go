@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	language string
-	versionPrefix string
+	language       string
+	versionPrefix  string
 	omitCommitHash bool
 )
 
