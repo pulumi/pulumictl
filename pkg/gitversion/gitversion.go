@@ -158,7 +158,6 @@ func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision, 
 	if err != nil {
 		return nil, fmt.Errorf("error parsing base versionComponents %q: %w", baseVersion, err)
 	}
-
 	if !isExact {
 		if version.Major == 0 {
 			version.Patch += 1
@@ -252,6 +251,12 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash) (bool, *plumbing.Refer
 
 	var exactTag *plumbing.Reference = nil
 	if err := tags.ForEach(func(ref *plumbing.Reference) error {
+		// we want to ignore the beta and rc tags - they ar ethe next major version so we
+		// don't want to use these in our calculations of the current release variant
+		if strings.Contains(ref.Name().String(), "beta") ||
+			strings.Contains(ref.Name().String(), "rc") {
+			return nil
+		}
 		if ref.Hash() == hash {
 			exactTag = ref
 			return storer.ErrStop
