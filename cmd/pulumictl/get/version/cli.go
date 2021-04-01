@@ -15,6 +15,7 @@ var (
 	language       string
 	versionPrefix  string
 	omitCommitHash bool
+	isPreRelease   bool
 )
 
 func Command() *cobra.Command {
@@ -46,9 +47,10 @@ func Command() *cobra.Command {
 
 			language = viper.GetString("language")
 			versionPrefix = viper.GetString("version-prefix")
+			isPreRelease = viper.GetBool("is-prerelease")
 
 			versions, err := gitversion.GetLanguageVersions(repo, plumbing.Revision(commitish),
-				omitCommitHash, versionPrefix)
+				omitCommitHash, versionPrefix, isPreRelease)
 			if err != nil {
 				return fmt.Errorf("error calculating version: %w", err)
 			}
@@ -75,6 +77,7 @@ func Command() *cobra.Command {
 	command.Flags().StringVarP(&language, "language", "p", "", "the platform for which the version should be output.")
 	command.Flags().StringVar(&versionPrefix, "version-prefix", "", "the version prefix (e.g. 3.0.0). Must be valid semver.")
 	command.Flags().BoolVarP(&omitCommitHash, "omit-commit-hash", "o", false, "whether to include or omit the commit hash in the version")
+	command.Flags().BoolVar(&isPreRelease, "is-prerelease", false, "whether this is a pre-release version")
 
 	viper.SetDefault("language", "generic")
 	viper.BindEnv("language", "PULUMI_LANGUAGE")
@@ -82,6 +85,9 @@ func Command() *cobra.Command {
 
 	viper.BindEnv("version-prefix", "VERSION_PREFIX")
 	viper.BindPFlag("version-prefix", command.Flags().Lookup("version-prefix"))
+
+	viper.BindEnv("is-prerelease", "IS_PRERELEASE")
+	viper.BindPFlag("is-prerelease", command.Flags().Lookup("is-prerelease"))
 
 	return command
 }

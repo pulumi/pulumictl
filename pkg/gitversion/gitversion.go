@@ -30,8 +30,8 @@ type LanguageVersions struct {
 // given `commitish` based on the most recent tag, the status of the work tree with respect
 // to dirty files, and a timestamp.
 func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omitCommitHash bool,
-	releasePrefix string) (*LanguageVersions, error) {
-	versionComponents, err := versionAtCommitForRepo(workingDirPath, commitish, releasePrefix)
+	releasePrefix string, isPrerelease bool) (*LanguageVersions, error) {
+	versionComponents, err := versionAtCommitForRepo(workingDirPath, commitish, releasePrefix, isPrerelease)
 	if err != nil {
 		return nil, fmt.Errorf("getting language versions: %w", err)
 	}
@@ -56,7 +56,7 @@ func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omi
 
 	// Check the shorthash
 	var shortHash string
-	if omitCommitHash {
+	if omitCommitHash || isPrerelease {
 		shortHash = ""
 	} else {
 		shortHash = fmt.Sprintf("+%s", versionComponents.ShortHash)
@@ -132,7 +132,8 @@ type versionComponents struct {
 
 // versionAtCommitForRepo determines the version components on which the language-specific variants
 // are calculated from.
-func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision, releasePrefix string) (*versionComponents, error) {
+func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision, releasePrefix string,
+	isPrerelease bool) (*versionComponents, error) {
 	// Open repository
 	repo, err := git.PlainOpenWithOptions(workingDirPath, &git.PlainOpenOptions{EnableDotGitCommonDir: true})
 	if err != nil {
@@ -149,7 +150,7 @@ func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision, 
 		return nil, fmt.Errorf("error getting commit for revision: %w", err)
 	}
 
-	baseVersion, isExact, err := determineBaseVersion(repo, revision)
+	baseVersion, isExact, err := determineBaseVersion(repo, revision, isPrerelease)
 	if err != nil {
 		return nil, fmt.Errorf("error determining base versionComponents: %w", err)
 	}
@@ -204,7 +205,7 @@ func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision, 
 // - Otherwise, "v0.0.0" is returned
 //
 // The second return value is true if an exact tag match was made.
-func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash) (string, bool, error) {
+func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash, isPrerelease bool) (string, bool, error) {
 	// Resolve the `commitish` we were given into a reference
 	commit, err := repo.CommitObject(*revision)
 	if err != nil {
@@ -212,7 +213,7 @@ func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash) (string
 	}
 
 	// First check whether we had a commit with an exact tag to start with
-	isExact, exactMatch, err := isExactTag(repo, commit.Hash)
+	isExact, exactMatch, err := isExactTag(repo, commit.Hash, isPrerelease)
 	if err != nil {
 		return "", false, fmt.Errorf("isExactTag: %w", err)
 	}
@@ -221,7 +222,7 @@ func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash) (string
 	}
 
 	// If not, find the most recent tag
-	hasRecent, recentMatch, err := mostRecentTag(repo, commit.Hash)
+	hasRecent, recentMatch, err := mostRecentTag(repo, commit.Hash, isPrerelease)
 	if err != nil {
 		return "", false, fmt.Errorf("mostRecentTag: %w", err)
 	}
@@ -243,7 +244,7 @@ func StripModuleTagPrefixes(tag string) string {
 
 // isExactTag returns true if the given hash has a tag associated with it. If
 // true is returned, the second return value is a reference representing the tag.
-func isExactTag(repo *git.Repository, hash plumbing.Hash) (bool, *plumbing.Reference, error) {
+func isExactTag(repo *git.Repository, hash plumbing.Hash, isPrerease bool) (bool, *plumbing.Reference, error) {
 	tags, err := repo.Tags()
 	if err != nil {
 		return false, nil, fmt.Errorf("error listing tags: %w", err)
@@ -251,10 +252,13 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash) (bool, *plumbing.Refer
 
 	var exactTag *plumbing.Reference = nil
 	if err := tags.ForEach(func(ref *plumbing.Reference) error {
-		// we want to ignore the beta and rc tags - they ar ethe next major version so we
+		// if we are marking the release as a pre-release, then we want to take into account
+		// the beta and rc versions
+		// if we are in a normal release cycle then we want to skip these
+		// we want to ignore the beta and rc tags - they are the next major version so we
 		// don't want to use these in our calculations of the current release variant
-		if strings.Contains(ref.Name().String(), "beta") ||
-			strings.Contains(ref.Name().String(), "rc") {
+		if !isPrerease && strings.Contains(ref.Name().String(), "beta") ||
+			!isPrerease && strings.Contains(ref.Name().String(), "rc") {
 			return nil
 		}
 		if ref.Hash() == hash {
@@ -273,7 +277,7 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash) (bool, *plumbing.Refer
 // mostRecentTag returns a reference to the most recent tag in which the given commit reference is included.
 // The first return value is true if there is a tag matching these criteria, and false if not. If the
 // first return is true, the second value contains a reference to the appropriate tag.
-func mostRecentTag(repo *git.Repository, ref plumbing.Hash) (bool, *plumbing.Reference, error) {
+func mostRecentTag(repo *git.Repository, ref plumbing.Hash, isPrerelease bool) (bool, *plumbing.Reference, error) {
 	commit, err := repo.CommitObject(ref)
 	if err != nil {
 		return false, nil, fmt.Errorf("no commit for ref %q: %w", ref, err)
@@ -282,7 +286,7 @@ func mostRecentTag(repo *git.Repository, ref plumbing.Hash) (bool, *plumbing.Ref
 	var mostRecentTag *plumbing.Reference
 	walker := object.NewCommitPreorderIter(commit, nil, nil)
 	err = walker.ForEach(func(commit *object.Commit) error {
-		isExact, exact, err := isExactTag(repo, commit.Hash)
+		isExact, exact, err := isExactTag(repo, commit.Hash, isPrerelease)
 		if err != nil {
 			return err
 		}

@@ -26,7 +26,7 @@ func TestMostRecentTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, headRef)
 
-		hasMostRecent, mostRecent, err := mostRecentTag(repo, headRef.Hash())
+		hasMostRecent, mostRecent, err := mostRecentTag(repo, headRef.Hash(), false)
 		require.NoError(t, err)
 		require.True(t, hasMostRecent)
 		require.NotNil(t, mostRecent)
@@ -44,7 +44,7 @@ func TestMostRecentTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, headRef)
 
-		hasMostRecent, mostRecent, err := mostRecentTag(repo, headRef.Hash())
+		hasMostRecent, mostRecent, err := mostRecentTag(repo, headRef.Hash(), false)
 		require.NoError(t, err)
 		require.False(t, hasMostRecent)
 		require.Nil(t, mostRecent)
@@ -64,7 +64,7 @@ func TestIsExactTag(t *testing.T) {
 	require.NotEmpty(t, headRef)
 
 	t.Run("Not an exact tag", func(t *testing.T) {
-		isExact, exact, err := isExactTag(repo, headRef.Hash())
+		isExact, exact, err := isExactTag(repo, headRef.Hash(), false)
 		require.NoError(t, err)
 		require.Nil(t, exact)
 		require.False(t, isExact)
@@ -75,7 +75,7 @@ func TestIsExactTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, exactRef)
 
-		isExact, exact, err := isExactTag(repo, exactRef.Hash())
+		isExact, exact, err := isExactTag(repo, exactRef.Hash(), false)
 		require.NoError(t, err)
 		require.NotNil(t, exact)
 		require.True(t, isExact)
@@ -86,18 +86,29 @@ func TestIsExactTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, exactRef)
 
-		isExact, exact, err := isExactTag(repo, exactRef.Hash())
+		isExact, exact, err := isExactTag(repo, exactRef.Hash(), false)
 		require.NoError(t, err)
 		require.NotNil(t, exact)
 		require.True(t, isExact)
 	})
 
-	t.Run("Skip the beta tag", func(t *testing.T) {
+	t.Run("Don't skip the beta tag as it's a pre-release", func(t *testing.T) {
 		exactRef, err := repo.Tag("v2.0.0-beta.1")
 		require.NoError(t, err)
 		require.NotNil(t, exactRef)
 
-		isExact, exact, err := isExactTag(repo, exactRef.Hash())
+		isExact, exact, err := isExactTag(repo, exactRef.Hash(), true)
+		require.NoError(t, err)
+		require.NotNil(t, exact)
+		require.True(t, isExact)
+	})
+
+	t.Run("Skip the beta as it's a normal release", func(t *testing.T) {
+		exactRef, err := repo.Tag("v2.0.0-beta.1")
+		require.NoError(t, err)
+		require.NotNil(t, exactRef)
+
+		isExact, exact, err := isExactTag(repo, exactRef.Hash(), false)
 		require.NoError(t, err)
 		require.Nil(t, exact)
 		require.False(t, isExact)
