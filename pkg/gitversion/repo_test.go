@@ -82,8 +82,14 @@ func testRepoSingleCommitPastRelease(repo *git.Repository) (*git.Repository, err
 	if _, err := workTree.Add("hello-world2"); err != nil {
 		return nil, fmt.Errorf("worktree-add: %w", err)
 	}
-	if _, err := workTree.Commit("Subsequent Commit!", &git.CommitOptions{Author: testSignature}); err != nil {
+	postReleaseCommit, err := workTree.Commit("Subsequent Commit!", &git.CommitOptions{Author: testSignature});
+	if err != nil {
 		return nil, fmt.Errorf("commit: %w", err)
+	}
+
+	// make the commit after tag a new beta tag
+	if _, err := repo.CreateTag("v2.0.0-beta.1", postReleaseCommit, nil); err != nil {
+		return nil, fmt.Errorf("tag: %w", err)
 	}
 
 	return repo, nil

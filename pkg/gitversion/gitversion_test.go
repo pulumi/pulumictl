@@ -91,6 +91,17 @@ func TestIsExactTag(t *testing.T) {
 		require.NotNil(t, exact)
 		require.True(t, isExact)
 	})
+
+	t.Run("Skip the beta tag", func(t *testing.T) {
+		exactRef, err := repo.Tag("v2.0.0-beta.1")
+		require.NoError(t, err)
+		require.NotNil(t, exactRef)
+
+		isExact, exact, err := isExactTag(repo, exactRef.Hash())
+		require.NoError(t, err)
+		require.Nil(t, exact)
+		require.False(t, isExact)
+	})
 }
 
 func TestIsWorktreeDirty(t *testing.T) {
