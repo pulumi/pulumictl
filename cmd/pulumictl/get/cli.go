@@ -4,6 +4,7 @@ import (
 	"github.com/pulumi/pulumictl/cmd/pulumictl/get/latest_plugin"
 	"github.com/spf13/cobra"
 
+	"github.com/pulumi/pulumictl/cmd/pulumictl/get/gosrcs"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/get/version"
 )
 
@@ -16,6 +17,7 @@ func Command() *cobra.Command {
 
 	command.AddCommand(version.Command())
 	command.AddCommand(latest_plugin.Command())
+	command.AddCommand(gosrcs.Command())
 
 	return command
 }
