@@ -11,6 +11,7 @@ builds:
     - linux
   goarch:
     - amd64
+    - arm64
   ldflags: -X github.com/pulumi/pulumictl/pkg/version.Version={{.Version}}
   binary: pulumictl
   main: ./cmd/pulumictl/main.go
