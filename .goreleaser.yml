@@ -37,3 +37,7 @@ brews:
       email: bot@pulumi.com
     homepage: "https://pulumi.io"
     description: "A swiss army knife for Pulumi development"
+    folder: Formula
+    license: Apache-2.0
+    test: |
+      system "#{bin}/pulumictl version"
