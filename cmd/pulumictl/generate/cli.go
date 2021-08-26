@@ -1,5 +1,5 @@
 // Copyright 2016-2021, Pulumi Corporation.
-// pts
+//
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package generate
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path"
@@ -78,7 +77,8 @@ func Command() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&inputFile,
 		"input", "i", "schema.json", "The schema from which to generate code")
 	cmd.PersistentFlags().StringVarP(&outputFile,
-		"output", "o", stdout, "The output directory to emit generated code. 'stdout' indicates that generate code should be printed.")
+		"output", "o", stdout, "The output directory to emit generated code."+
+			" 'stdout' indicates that generate code should be printed.")
 	return cmd
 }
 
@@ -152,11 +152,17 @@ func displayPackage(pkg map[string][]byte) {
 
 func writePackage(dir string, pkg map[string][]byte) error {
 	err := os.Mkdir(dir, 0755)
-	if err != nil {
+	if err != nil && !os.IsExist(err) {
 		return err
 	}
 	for name, source := range pkg {
-		err = ioutil.WriteFile(path.Join(dir, name), source, fs.FileMode(666))
+		// We do this because name might contain directories
+		fullPath := path.Join(dir, name)
+		err = os.MkdirAll(path.Dir(fullPath), 0755)
+		if err != nil && !os.IsExist(err) {
+			return err
+		}
+		err = ioutil.WriteFile(fullPath, source, 0644)
 		if err != nil {
 			return err
 		}
