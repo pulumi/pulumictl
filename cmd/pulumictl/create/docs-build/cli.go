@@ -20,6 +20,11 @@ var (
 	org         string
 	repo        string
 	ref         string
+	category    string
+	displayName string
+	component   bool
+	schemaPath  string
+	publisher   string
 	tokenClient *http.Client
 )
 
@@ -29,6 +34,11 @@ type Payload struct {
 	Project          string `json:"project"`
 	ProjectShortname string `json:"project-shortname"`
 	Ref              string `json:"ref"`
+	Category         string `json:"category"`
+	DisplayName      string `json:"display-name"`
+	Component        bool   `json:"is-component"`
+	SchemaPath       string `json:"schema-path"`
+	Publisher        string `json:"publisher"`
 }
 
 const eventType = "tfgen-provider"
@@ -48,6 +58,11 @@ func Command() *cobra.Command {
 			docsRepo := viper.GetString("docs-repo")
 			project := args[0]
 			ref := args[1]
+			category = viper.GetString("category")
+			displayName = viper.GetString("display-name")
+			component = viper.GetBool("is-component")
+			schemaPath = viper.GetString("schema-path")
+			publisher = viper.GetString("publisher")
 
 			// perform some string manipulation and validation
 			// this manipulation will allow us to handle providers
@@ -78,6 +93,11 @@ func Command() *cobra.Command {
 				Project:          project,
 				ProjectShortname: shortName,
 				Ref:              ref,
+				Category:         category,
+				DisplayName:      displayName,
+				Component:        component,
+				SchemaPath:       schemaPath,
+				Publisher:        publisher,
 			})
 
 			if err != nil {
@@ -109,11 +129,26 @@ func Command() *cobra.Command {
 
 	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
 	command.Flags().StringP("docs-repo", "d", "pulumi/docs", "the docs repository to send in the payload")
+	command.Flags().StringP("category", "c", "", "the category of the provider/component")
+	command.Flags().String("display-name", "", "the display name of the provider/component")
+	command.Flags().Bool("is-component", false, "is this a component?")
+	command.Flags().String("schema-path", "", "the path (relative to repo root) to the schema.yaml/json file")
+	command.Flags().String("publisher", "", "the name of the provider/component publisher")
 
 	viper.BindEnv("org", "GITHUB_ORG")
 	viper.BindEnv("docs-repo", "GITHUB_DOCS_REPO")
+	viper.BindEnv("category", "PROVIDER_CATEGORY")
+	viper.BindEnv("display-name", "PROVIDER_DISPLAY_NAME")
+	viper.BindEnv("is-component", "PROVIDER_IS_COMPONENT")
+	viper.BindEnv("schema-path", "PROVIDER_SCHEMA_PATH")
+	viper.BindEnv("publisher", "PROVIDER_PUBLISHER_NAME")
 	viper.BindPFlag("org", command.Flags().Lookup("org"))
 	viper.BindPFlag("docs-repo", command.Flags().Lookup("docs-repo"))
+	viper.BindPFlag("category", command.Flags().Lookup("category"))
+	viper.BindPFlag("display-name", command.Flags().Lookup("display-name"))
+	viper.BindPFlag("is-component", command.Flags().Lookup("is-component"))
+	viper.BindPFlag("schema-path", command.Flags().Lookup("schema-path"))
+	viper.BindPFlag("publisher", command.Flags().Lookup("publisher"))
 
 	return command
 }
