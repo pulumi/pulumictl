@@ -29,7 +29,7 @@ release:
 brews:
   - 
     name: pulumictl
-    github:
+    tap:
       owner: pulumi
       name: homebrew-tap
     commit_author:
