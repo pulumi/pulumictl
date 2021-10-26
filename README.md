@@ -10,11 +10,9 @@ _*Important Note:* This tool is only intended for use by people working on Pulum
 
 Add the Pulumi homebrew tap and install:
 
-```
+```bash
 brew tap pulumi/tap
 brew install pulumictl
 ```
 
 Or download the binary directly from Github releases and place it in your `$PATH`
-
-
