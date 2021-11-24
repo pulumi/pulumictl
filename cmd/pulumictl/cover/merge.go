@@ -128,17 +128,17 @@ func coverCommand() *cobra.Command {
 
 			entries, err := os.ReadDir(inPath)
 			if err != nil {
-				return fmt.Errorf("reading input: %v", err)
+				return fmt.Errorf("reading input: %w", err)
 			}
 			for _, e := range entries {
 				if !e.IsDir() && filepath.Ext(e.Name()) == ".cov" {
 					path := filepath.Join(inPath, e.Name())
 					rawProfiles, err := cover.ParseProfiles(path)
 					if err != nil {
-						return fmt.Errorf("parsing profiles from '%v': %v", path, err)
+						return fmt.Errorf("parsing profiles from '%v': %w", path, err)
 					}
 					if err = profiles.merge(rawProfiles); err != nil {
-						return fmt.Errorf("merging coverage from '%v': %v", path, err)
+						return fmt.Errorf("merging coverage from '%v': %w", path, err)
 					}
 				}
 			}
@@ -147,13 +147,13 @@ func coverCommand() *cobra.Command {
 			if outPath != "" {
 				outFile, err = os.Create(outPath)
 				if err != nil {
-					return fmt.Errorf("creating output file '%v': %v", outPath)
+					return fmt.Errorf("creating output file '%v': %w", outPath, err)
 				}
 				defer outFile.Close()
 			}
 
 			if err = profiles.write(outFile); err != nil {
-				return fmt.Errorf("writing merged profile: %v", err)
+				return fmt.Errorf("writing merged profile: %w", err)
 			}
 
 			return nil
