@@ -41,7 +41,7 @@ type Payload struct {
 	Publisher        string `json:"publisher"`
 }
 
-const eventType = "tfgen-provider"
+const eventType = "resource-provider"
 
 func Command() *cobra.Command {
 	command := &cobra.Command{
@@ -55,7 +55,7 @@ func Command() *cobra.Command {
 			githubToken = viper.GetString("token")
 			org = viper.GetString("org")
 			ref = viper.GetString("ref")
-			docsRepo := viper.GetString("docs-repo")
+			docsRepo := "pulumi/registry"
 			project := args[0]
 			ref := args[1]
 			category = viper.GetString("category")
@@ -128,7 +128,6 @@ func Command() *cobra.Command {
 	}
 
 	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
-	command.Flags().StringP("docs-repo", "d", "pulumi/docs", "the docs repository to send in the payload")
 	command.Flags().StringP("category", "c", "", "the category of the provider/component")
 	command.Flags().String("display-name", "", "the display name of the provider/component")
 	command.Flags().Bool("is-component", false, "is this a component?")
@@ -136,14 +135,12 @@ func Command() *cobra.Command {
 	command.Flags().String("publisher", "", "the name of the provider/component publisher")
 
 	viper.BindEnv("org", "GITHUB_ORG")
-	viper.BindEnv("docs-repo", "GITHUB_DOCS_REPO")
 	viper.BindEnv("category", "PROVIDER_CATEGORY")
 	viper.BindEnv("display-name", "PROVIDER_DISPLAY_NAME")
 	viper.BindEnv("is-component", "PROVIDER_IS_COMPONENT")
 	viper.BindEnv("schema-path", "PROVIDER_SCHEMA_PATH")
 	viper.BindEnv("publisher", "PROVIDER_PUBLISHER_NAME")
 	viper.BindPFlag("org", command.Flags().Lookup("org"))
-	viper.BindPFlag("docs-repo", command.Flags().Lookup("docs-repo"))
 	viper.BindPFlag("category", command.Flags().Lookup("category"))
 	viper.BindPFlag("display-name", command.Flags().Lookup("display-name"))
 	viper.BindPFlag("is-component", command.Flags().Lookup("is-component"))
