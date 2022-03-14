@@ -10,6 +10,7 @@ import (
 	"github.com/pulumi/pulumictl/cmd/pulumictl/copyright"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/cover"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/create"
+	"github.com/pulumi/pulumictl/cmd/pulumictl/create/winget"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/dispatch"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/generate"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/get"
@@ -35,6 +36,7 @@ func configureCLI() *cobra.Command {
 	rootCommand.AddCommand(copyright.Command())
 	rootCommand.AddCommand(generate.Command())
 	rootCommand.AddCommand(cover.Command())
+	rootCommand.AddCommand(winget.Command())
 
 	rootCommand.PersistentFlags().StringVarP(&githubToken, "token", "t", "", "a github token to use for making API calls to GitHub.")
 	rootCommand.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "enable debug logging")
