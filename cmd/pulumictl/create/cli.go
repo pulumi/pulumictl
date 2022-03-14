@@ -6,6 +6,7 @@ import (
 	pulumiCliDocsbuild "github.com/pulumi/pulumictl/cmd/pulumictl/create/cli-docs-build"
 	docsbuild "github.com/pulumi/pulumictl/cmd/pulumictl/create/docs-build"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/create/homebrew"
+	"github.com/pulumi/pulumictl/cmd/pulumictl/create/winget"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +22,7 @@ func Command() *cobra.Command {
 	command.AddCommand(chocolatey.Command())
 	command.AddCommand(homebrew.Command())
 	command.AddCommand(azure.Command())
+	command.AddCommand(winget.Command())
 
 	return command
 }
