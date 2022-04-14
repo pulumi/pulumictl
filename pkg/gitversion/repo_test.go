@@ -82,7 +82,7 @@ func testRepoSingleCommitPastRelease(repo *git.Repository) (*git.Repository, err
 	if _, err := workTree.Add("hello-world2"); err != nil {
 		return nil, fmt.Errorf("worktree-add: %w", err)
 	}
-	postReleaseCommit, err := workTree.Commit("Subsequent Commit!", &git.CommitOptions{Author: testSignature});
+	postReleaseCommit, err := workTree.Commit("Subsequent Commit!", &git.CommitOptions{Author: testSignature})
 	if err != nil {
 		return nil, fmt.Errorf("commit: %w", err)
 	}
@@ -112,6 +112,45 @@ func testRepoSingleCommit(repo *git.Repository) (*git.Repository, error) {
 	_, err = workTree.Commit("Initial Commit!", &git.CommitOptions{Author: testSignature})
 	if err != nil {
 		return nil, fmt.Errorf("commit: %w", err)
+	}
+
+	return repo, nil
+}
+
+func testRepoWithTags(repo *git.Repository, tagSequence []string) (*git.Repository, error) {
+	workTree, err := repo.Worktree()
+	if err != nil {
+		return nil, fmt.Errorf("worktree: %w", err)
+	}
+
+	addFile := func(name, content string) error {
+		if err := writeFile(workTree.Filesystem, name, content); err != nil {
+			return fmt.Errorf("writeFile: %w", err)
+		}
+		if _, err := workTree.Add(name); err != nil {
+			return fmt.Errorf("worktree-add: %w", err)
+		}
+		return nil
+	}
+
+	commitAndTag := func(tag string) error {
+		tagCommitHash, err := workTree.Commit(tag, &git.CommitOptions{Author: testSignature})
+		if err != nil {
+			return fmt.Errorf("commit: %w", err)
+		}
+		if _, err := repo.CreateTag(tag, tagCommitHash, nil); err != nil {
+			return fmt.Errorf("tag: %w", err)
+		}
+		return nil
+	}
+
+	for i, tag := range tagSequence {
+		if err := addFile(fmt.Sprintf("%d.txt", i), tag); err != nil {
+			return nil, err
+		}
+		if err := commitAndTag(tag); err != nil {
+			return nil, err
+		}
 	}
 
 	return repo, nil

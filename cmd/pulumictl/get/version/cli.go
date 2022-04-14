@@ -3,6 +3,7 @@ package version
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/go-git/go-git/v5/plumbing"
@@ -16,6 +17,7 @@ var (
 	versionPrefix  string
 	omitCommitHash bool
 	isPreRelease   bool
+	tagPattern     string
 )
 
 func Command() *cobra.Command {
@@ -48,9 +50,28 @@ func Command() *cobra.Command {
 			language = viper.GetString("language")
 			versionPrefix = viper.GetString("version-prefix")
 			isPreRelease = viper.GetBool("is-prerelease")
+			tagPattern = viper.GetString("tag-pattern")
 
-			versions, err := gitversion.GetLanguageVersions(repo, plumbing.Revision(commitish),
-				omitCommitHash, versionPrefix, isPreRelease)
+			var tagFilter func(string) bool
+			if tagPattern != "" {
+				re, err := regexp.Compile(tagPattern)
+				if err != nil {
+					return fmt.Errorf("tag-pattern not a valid regexp: %w", err)
+				}
+				tagFilter = func(tag string) bool {
+					return re.MatchString(tag)
+				}
+			}
+
+			versions, err := gitversion.GetLanguageVersionsWithOptions(gitversion.LanguageVersionsOptions{
+				WorkingDirPath: repo,
+				Commitish:      plumbing.Revision(commitish),
+				OmitCommitHash: omitCommitHash,
+				ReleasePrefix:  versionPrefix,
+				IsPreRelease:   isPreRelease,
+				TagFilter:      tagFilter,
+			})
+
 			if err != nil {
 				return fmt.Errorf("error calculating version: %w", err)
 			}
@@ -78,6 +99,7 @@ func Command() *cobra.Command {
 	command.Flags().StringVar(&versionPrefix, "version-prefix", "", "the version prefix (e.g. 3.0.0). Must be valid semver.")
 	command.Flags().BoolVarP(&omitCommitHash, "omit-commit-hash", "o", false, "whether to include or omit the commit hash in the version")
 	command.Flags().BoolVar(&isPreRelease, "is-prerelease", false, "whether this is a pre-release version")
+	command.Flags().StringVar(&tagPattern, "tag-pattern", "", "regex pattern to filter tags with (e.g. ^sdk/)")
 
 	viper.SetDefault("language", "generic")
 	viper.BindEnv("language", "PULUMI_LANGUAGE")
@@ -88,6 +110,9 @@ func Command() *cobra.Command {
 
 	viper.BindEnv("is-prerelease", "IS_PRERELEASE")
 	viper.BindPFlag("is-prerelease", command.Flags().Lookup("is-prerelease"))
+
+	viper.BindEnv("tag-pattern", "TAG_PATTERN")
+	viper.BindPFlag("tag-pattern", command.Flags().Lookup("tag-pattern"))
 
 	return command
 }
