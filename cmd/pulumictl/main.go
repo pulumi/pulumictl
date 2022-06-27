@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	download_binary "github.com/pulumi/pulumictl/cmd/pulumictl/download-binary"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -37,6 +38,7 @@ func configureCLI() *cobra.Command {
 	rootCommand.AddCommand(generate.Command())
 	rootCommand.AddCommand(cover.Command())
 	rootCommand.AddCommand(winget.Command())
+	rootCommand.AddCommand(download_binary.Command())
 
 	rootCommand.PersistentFlags().StringVarP(&githubToken, "token", "t", "", "a github token to use for making API calls to GitHub.")
 	rootCommand.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "enable debug logging")
