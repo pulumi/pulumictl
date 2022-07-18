@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/pulumi/pulumictl/pkg/version"
@@ -25,7 +26,13 @@ func Command() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("error obtaining working directory: %w", err)
 				}
-				version, err := gitversion.GetLanguageVersions(workingDir, plumbing.Revision(commitish), true,
+				// Open repository
+				repo, err := git.PlainOpenWithOptions(workingDir, &git.PlainOpenOptions{EnableDotGitCommonDir: true})
+				if err != nil {
+					return fmt.Errorf("error opening repository: %w", err)
+				}
+
+				version, err := gitversion.GetLanguageVersions(repo, plumbing.Revision(commitish), true,
 					"" /*isPrerelease*/, false)
 				if err != nil {
 					return fmt.Errorf("error calculating version: %w", err)
