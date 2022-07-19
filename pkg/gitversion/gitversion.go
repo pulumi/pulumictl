@@ -110,13 +110,8 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 
 	// Detect if the git worktree is dirty, and add `dirty` to the version if it is
 	if versionComponents.Dirty {
-		if versionComponents.IsExact {
-			preVersion = fmt.Sprintf("%s+dirty", preVersion)
-			pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
-		} else {
-			preVersion = fmt.Sprintf("%s.dirty", preVersion)
-			pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
-		}
+		preVersion = fmt.Sprintf("%s.dirty", preVersion)
+		pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
 	}
 
 	// a base version with the pre release info
