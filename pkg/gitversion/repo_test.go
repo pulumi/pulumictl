@@ -4,14 +4,17 @@ import (
 	"bufio"
 	"fmt"
 	"path/filepath"
+	"testing"
 
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/stretchr/testify/require"
 )
 
 var testSignature = &object.Signature{
@@ -75,7 +78,7 @@ func testRepoSingleCommitPastRelease(repo *git.Repository) (*git.Repository, err
 		return nil, fmt.Errorf("tag: %w", err)
 	}
 
-	// commit after taf
+	// commit after tag
 	if err := writeFile(workDir, "hello-world2", "Hello World 2"); err != nil {
 		return nil, fmt.Errorf("writeFile: %w", err)
 	}
@@ -95,26 +98,34 @@ func testRepoSingleCommitPastRelease(repo *git.Repository) (*git.Repository, err
 	return repo, nil
 }
 
-func testRepoSingleCommit(repo *git.Repository) (*git.Repository, error) {
+func addFile(t *testing.T, workTree *git.Worktree, name, content string) {
+	err := writeFile(workTree.Filesystem, name, content)
+	require.NoError(t, err, "writeFile")
+
+	_, err = workTree.Add(name)
+	require.NoError(t, err, "worktree-add")
+}
+
+func testRepoSingleCommit(repo *git.Repository) (plumbing.Hash, error) {
 	workTree, err := repo.Worktree()
 	if err != nil {
-		return nil, fmt.Errorf("worktree: %w", err)
+		return plumbing.Hash{}, fmt.Errorf("worktree: %w", err)
 	}
 
 	workDir := workTree.Filesystem
 	if err := writeFile(workDir, "hello-world", "Hello World"); err != nil {
-		return nil, fmt.Errorf("writeFile: %w", err)
+		return plumbing.Hash{}, fmt.Errorf("writeFile: %w", err)
 	}
 	if _, err := workTree.Add("hello-world"); err != nil {
-		return nil, fmt.Errorf("worktree-add: %w", err)
+		return plumbing.Hash{}, fmt.Errorf("worktree-add: %w", err)
 	}
 
-	_, err = workTree.Commit("Initial Commit!", &git.CommitOptions{Author: testSignature})
+	commit, err := workTree.Commit("Initial Commit!", &git.CommitOptions{Author: testSignature})
 	if err != nil {
-		return nil, fmt.Errorf("commit: %w", err)
+		return plumbing.Hash{}, fmt.Errorf("commit: %w", err)
 	}
 
-	return repo, nil
+	return commit, nil
 }
 
 func testRepoWithTags(repo *git.Repository, tagSequence []string) (*git.Repository, error) {

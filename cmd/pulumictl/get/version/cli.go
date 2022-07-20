@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/spf13/cobra"
@@ -37,14 +38,13 @@ func Command() *cobra.Command {
 				commitish = args[0]
 			}
 
-			repo, _ := cmd.Flags().GetString("repo")
-			if repo == "" {
-				workingDir, err := os.Getwd()
+			workingDir, _ := cmd.Flags().GetString("repo")
+			if workingDir == "" {
+				var err error
+				workingDir, err = os.Getwd()
 				if err != nil {
 					return fmt.Errorf("error obtaining working directory: %w", err)
 				}
-
-				repo = workingDir
 			}
 
 			language = viper.GetString("language")
@@ -63,8 +63,13 @@ func Command() *cobra.Command {
 				}
 			}
 
+			repo, err := git.PlainOpenWithOptions(workingDir, &git.PlainOpenOptions{EnableDotGitCommonDir: true})
+			if err != nil {
+				return fmt.Errorf("error opening repository: %w", err)
+			}
+
 			versions, err := gitversion.GetLanguageVersionsWithOptions(gitversion.LanguageVersionsOptions{
-				WorkingDirPath: repo,
+				Repo:           repo,
 				Commitish:      plumbing.Revision(commitish),
 				OmitCommitHash: omitCommitHash,
 				ReleasePrefix:  versionPrefix,

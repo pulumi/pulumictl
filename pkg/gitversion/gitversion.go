@@ -27,7 +27,7 @@ type LanguageVersions struct {
 }
 
 type LanguageVersionsOptions struct {
-	WorkingDirPath string
+	Repo           *git.Repository
 	Commitish      plumbing.Revision
 	OmitCommitHash bool
 	ReleasePrefix  string
@@ -39,14 +39,14 @@ type LanguageVersionsOptions struct {
 // given `commitish` based on the most recent tag, the status of the work tree with respect
 // to dirty files, and a timestamp.
 func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVersions, error) {
-	workingDirPath := opts.WorkingDirPath
+	repo := opts.Repo
 	commitish := opts.Commitish
 	omitCommitHash := opts.OmitCommitHash
 	releasePrefix := opts.ReleasePrefix
 	isPrerelease := opts.IsPreRelease
 	tagFilter := opts.TagFilter
 
-	versionComponents, err := versionAtCommitForRepo(workingDirPath, commitish, releasePrefix, isPrerelease, tagFilter)
+	versionComponents, err := versionAtCommitForRepo(repo, commitish, releasePrefix, isPrerelease, tagFilter)
 	if err != nil {
 		return nil, fmt.Errorf("getting language versions: %w", err)
 	}
@@ -110,13 +110,8 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 
 	// Detect if the git worktree is dirty, and add `dirty` to the version if it is
 	if versionComponents.Dirty {
-		if versionComponents.IsExact {
-			preVersion = fmt.Sprintf("%s+dirty", preVersion)
-			pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
-		} else {
-			preVersion = fmt.Sprintf("%s.dirty", preVersion)
-			pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
-		}
+		preVersion = fmt.Sprintf("%s.dirty", preVersion)
+		pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
 	}
 
 	// a base version with the pre release info
@@ -137,10 +132,10 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 }
 
 // See GetLanguageVersionsWithOptions.
-func GetLanguageVersions(workingDirPath string, commitish plumbing.Revision, omitCommitHash bool,
+func GetLanguageVersions(repo *git.Repository, commitish plumbing.Revision, omitCommitHash bool,
 	releasePrefix string, isPrerelease bool) (*LanguageVersions, error) {
 	return GetLanguageVersionsWithOptions(LanguageVersionsOptions{
-		WorkingDirPath: workingDirPath,
+		Repo:           repo,
 		Commitish:      commitish,
 		OmitCommitHash: omitCommitHash,
 		ReleasePrefix:  releasePrefix,
@@ -159,13 +154,8 @@ type versionComponents struct {
 
 // versionAtCommitForRepo determines the version components on which the language-specific variants
 // are calculated from.
-func versionAtCommitForRepo(workingDirPath string, commitish plumbing.Revision, releasePrefix string,
+func versionAtCommitForRepo(repo *git.Repository, commitish plumbing.Revision, releasePrefix string,
 	isPrerelease bool, tagFilter func(string) bool) (*versionComponents, error) {
-	// Open repository
-	repo, err := git.PlainOpenWithOptions(workingDirPath, &git.PlainOpenOptions{EnableDotGitCommonDir: true})
-	if err != nil {
-		return nil, fmt.Errorf("error opening repository: %w", err)
-	}
 
 	revision, err := repo.ResolveRevision(commitish)
 	if err != nil {

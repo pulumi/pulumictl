@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,15 +39,11 @@ func TestMostRecentTag(t *testing.T) {
 	t.Run("Repo with no tags", func(t *testing.T) {
 		repo, err := testRepoCreate()
 		require.NoError(t, err)
-		repo, err = testRepoSingleCommit(repo)
+		head, err := testRepoSingleCommit(repo)
 		require.NoError(t, err)
-		require.NotNil(t, repo)
+		require.NotEmpty(t, head)
 
-		headRef, err := repo.Head()
-		require.NoError(t, err)
-		require.NotEmpty(t, headRef)
-
-		hasMostRecent, mostRecent, err := mostRecentTag(repo, headRef.Hash(), false, nil)
+		hasMostRecent, mostRecent, err := mostRecentTag(repo, head, false, nil)
 		require.NoError(t, err)
 		require.False(t, hasMostRecent)
 		require.Nil(t, mostRecent)
@@ -165,9 +163,9 @@ func TestIsWorktreeDirty(t *testing.T) {
 	}()
 	repo, err := testRepoFSCreate(dir)
 	require.NoError(t, err)
-	repo, err = testRepoSingleCommit(repo)
+	head, err := testRepoSingleCommit(repo)
 	require.NoError(t, err)
-	require.NotNil(t, repo)
+	require.NotEmpty(t, head)
 
 	t.Run("Working tree is clean", func(t *testing.T) {
 		clean, err := workTreeIsDirty(repo)
@@ -178,19 +176,189 @@ func TestIsWorktreeDirty(t *testing.T) {
 	// Add a file but don't commit it
 	worktree, err := repo.Worktree()
 	if err != nil {
-		t.Errorf("worktree: %w", err)
+		t.Errorf("worktree: %s", err)
 	}
 
 	workDir := worktree.Filesystem
 
 	// Write a file but don't commit it
 	if err := writeFile(workDir, "hello-world", "Hello World 2"); err != nil {
-		t.Errorf("writeFile: %w", err)
+		t.Errorf("writeFile: %s", err)
 	}
 
 	t.Run("Working tree is dirty", func(t *testing.T) {
 		dirty, err := workTreeIsDirty(repo)
 		require.NoError(t, err)
 		require.True(t, dirty)
+	})
+}
+
+func TestGetVersion(t *testing.T) {
+
+	t.Run("Repo with no tags", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+		_, err = testRepoSingleCommit(repo)
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "0.0.1-alpha.0+68804cfa", version.SemVer)
+		require.Equal(t, "0.0.1-alpha.0+68804cfa", version.DotNet)
+		require.Equal(t, "v0.0.1-alpha.0+68804cfa", version.JavaScript)
+		require.Equal(t, "0.0.1a0", version.Python)
+	})
+
+	t.Run("Repo with exact tag", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.0.0", version.SemVer)
+		require.Equal(t, "1.0.0", version.DotNet)
+		require.Equal(t, "v1.0.0", version.JavaScript)
+		require.Equal(t, "1.0.0", version.Python)
+	})
+
+	t.Run("Repo with with commit after tag", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+		workTree, err := repo.Worktree()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		// add another commit
+		addFile(t, workTree, "hello.txt", "Hello world")
+		_, err = workTree.Commit("Next commit", &git.CommitOptions{Author: testSignature})
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.1.0-alpha.0+9fa804e8", version.SemVer)
+		require.Equal(t, "1.1.0-alpha.0+9fa804e8", version.DotNet)
+		require.Equal(t, "v1.1.0-alpha.0+9fa804e8", version.JavaScript)
+		require.Equal(t, "1.1.0a0", version.Python)
+	})
+
+	t.Run("Repo with with commit after tag and dirty", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+		workTree, err := repo.Worktree()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		// add another commit
+		addFile(t, workTree, "hello.txt", "Hello world")
+		_, err = workTree.Commit("Next commit", &git.CommitOptions{Author: testSignature})
+		require.NoError(t, err)
+
+		// Write a file but don't commit it
+		workDir := workTree.Filesystem
+		err = writeFile(workDir, "hello-world", "Hello World 2")
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.1.0-alpha.0+9fa804e8.dirty", version.SemVer)
+		require.Equal(t, "1.1.0-alpha.0+9fa804e8.dirty", version.DotNet)
+		require.Equal(t, "v1.1.0-alpha.0+9fa804e8.dirty", version.JavaScript)
+		require.Equal(t, "1.1.0a0+dirty", version.Python)
+	})
+
+	t.Run("Repo with no tags and dirty", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+		workTree, err := repo.Worktree()
+		require.NoError(t, err)
+		_, err = testRepoSingleCommit(repo)
+		require.NoError(t, err)
+
+		// Write a file but don't commit it
+		workDir := workTree.Filesystem
+		err = writeFile(workDir, "hello-world", "Hello World 2")
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "0.0.1-alpha.0+68804cfa.dirty", version.SemVer)
+		require.Equal(t, "0.0.1-alpha.0+68804cfa.dirty", version.DotNet)
+		require.Equal(t, "v0.0.1-alpha.0+68804cfa.dirty", version.JavaScript)
+		require.Equal(t, "0.0.1a0+dirty", version.Python)
+	})
+
+	t.Run("Repo with alpha tag and dirty", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+		workTree, err := repo.Worktree()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0-alpha.1",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		// Write a file but don't commit it
+		workDir := workTree.Filesystem
+		err = writeFile(workDir, "hello-world", "Hello World 2")
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.0.0-alpha.1+e624a7d7.dirty", version.SemVer)
+		require.Equal(t, "1.0.0-alpha.1+e624a7d7.dirty", version.DotNet)
+		require.Equal(t, "v1.0.0-alpha.1+e624a7d7.dirty", version.JavaScript)
+		require.Equal(t, "1.0.0a1+dirty", version.Python)
 	})
 }
