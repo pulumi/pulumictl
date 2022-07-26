@@ -361,4 +361,57 @@ func TestGetVersion(t *testing.T) {
 		require.Equal(t, "v1.0.0-alpha.1+e624a7d7.dirty", version.JavaScript)
 		require.Equal(t, "1.0.0a1+dirty", version.Python)
 	})
+
+	t.Run("Repo with un-dotted alpha tag", func(t *testing.T) {
+		// Regression test for https://github.com/pulumi/pulumictl/issues/50
+
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0-alpha",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.0.0-alpha+26d1c29c", version.SemVer)
+		require.Equal(t, "1.0.0-alpha+26d1c29c", version.DotNet)
+		require.Equal(t, "v1.0.0-alpha+26d1c29c", version.JavaScript)
+		require.Equal(t, "1.0.0a0", version.Python)
+	})
+
+	t.Run("Repo with un-dotted alpha tag marked for pre-release", func(t *testing.T) {
+		// Regression test for https://gi thub.com/pulumi/pulumictl/issues/50
+
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0-alpha",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			IsPreRelease: true,
+			Repo:         repo,
+			Commitish:    plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.0.0-alpha", version.SemVer)
+		require.Equal(t, "1.0.0-alpha", version.DotNet)
+		require.Equal(t, "v1.0.0-alpha", version.JavaScript)
+		require.Equal(t, "1.0.0a0", version.Python)
+	})
 }
