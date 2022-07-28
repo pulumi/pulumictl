@@ -274,6 +274,11 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash,
 
 	var exactTag *plumbing.Reference = nil
 	if err := tags.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Type() != plumbing.HashReference {
+			// Skip symbolic refs, for simplicity. We're not going to try and recursively resolve these.
+			return nil
+		}
+
 		refName := ref.Name().String()
 
 		// if we are marking the release as a pre-release, then we want to take into account
@@ -292,9 +297,24 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash,
 			return nil
 		}
 
-		if ref.Hash() == hash {
-			exactTag = ref
-			return storer.ErrStop
+		obj, err := repo.TagObject(ref.Hash())
+		switch err {
+		case nil:
+			// This is an annotated tag, check the hash of the target of the tag object
+			if obj.Target == hash {
+				exactTag = ref
+				return storer.ErrStop
+			}
+
+		case plumbing.ErrObjectNotFound:
+			// Not a tag object, pointing directly to the commit
+			if ref.Hash() == hash {
+				exactTag = ref
+				return storer.ErrStop
+			}
+
+		default:
+			return err
 		}
 
 		return nil
