@@ -275,7 +275,7 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash,
 	var exactTag *plumbing.Reference = nil
 	if err := tags.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Type() != plumbing.HashReference {
-			// Skip symbolic refs
+			// Skip symbolic refs, for simplicity. We're not going to try and recursively resolve these.
 			return nil
 		}
 
