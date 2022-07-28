@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/require"
 )
 
@@ -377,7 +378,13 @@ func TestGetVersion(t *testing.T) {
 		tagCommitHash, err := workTree.Commit("Commit for v1.0.0", &git.CommitOptions{Author: testSignature})
 		require.NoError(t, err)
 
-		_, err = repo.CreateTag("v1.0.0", tagCommitHash, &git.CreateTagOptions{Message: "version 1"})
+		_, err = repo.CreateTag("v1.0.0", tagCommitHash, &git.CreateTagOptions{
+			Message: "version 1",
+			Tagger: &object.Signature{
+				Name:  "test",
+				Email: "test@example.com",
+			},
+		})
 		require.NoError(t, err)
 
 		opts := LanguageVersionsOptions{
