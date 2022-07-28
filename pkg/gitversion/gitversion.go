@@ -300,7 +300,7 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash,
 		obj, err := repo.TagObject(ref.Hash())
 		switch err {
 		case nil:
-			// This is an annotated, check the hash of the target of the tag object
+			// This is an annotated tag, check the hash of the target of the tag object
 			if obj.Target == hash {
 				exactTag = ref
 				return storer.ErrStop
