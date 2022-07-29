@@ -399,4 +399,35 @@ func TestGetVersion(t *testing.T) {
 		require.Equal(t, "v1.0.0", version.JavaScript)
 		require.Equal(t, "1.0.0", version.Python)
 	})
+
+	t.Run("Repo with exact tag and dirty", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+		workTree, err := repo.Worktree()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		// Write a file but don't commit it
+		workDir := workTree.Filesystem
+		err = writeFile(workDir, "hello-world", "Hello World 2")
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.0.0+dirty", version.SemVer)
+		require.Equal(t, "1.0.0+dirty", version.DotNet)
+		require.Equal(t, "v1.0.0+dirty", version.JavaScript)
+		require.Equal(t, "1.0.0+dirty", version.Python)
+	})
 }
