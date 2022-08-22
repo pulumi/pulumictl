@@ -63,7 +63,9 @@ func Command() *cobra.Command {
 				}
 			}
 
-			repo, err := git.PlainOpenWithOptions(workingDir, &git.PlainOpenOptions{EnableDotGitCommonDir: true})
+			repo, err := git.PlainOpenWithOptions(workingDir, &git.PlainOpenOptions{
+				DetectDotGit:          true,
+				EnableDotGitCommonDir: true})
 			if err != nil {
 				return fmt.Errorf("error opening repository: %w", err)
 			}
