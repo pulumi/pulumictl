@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/require"
 )
 
@@ -360,6 +361,74 @@ func TestGetVersion(t *testing.T) {
 		require.Equal(t, "1.0.0-alpha.1+e624a7d7.dirty", version.DotNet)
 		require.Equal(t, "v1.0.0-alpha.1+e624a7d7.dirty", version.JavaScript)
 		require.Equal(t, "1.0.0a1+dirty", version.Python)
+	})
+
+	t.Run("Repo with annotated tag", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+
+		workTree, err := repo.Worktree()
+		require.NoError(t, err)
+
+		err = writeFile(workTree.Filesystem, "test.txt", "Hello world")
+		require.NoError(t, err)
+		_, err = workTree.Add("test.txt")
+		require.NoError(t, err)
+
+		tagCommitHash, err := workTree.Commit("Commit for v1.0.0", &git.CommitOptions{Author: testSignature})
+		require.NoError(t, err)
+
+		_, err = repo.CreateTag("v1.0.0", tagCommitHash, &git.CreateTagOptions{
+			Message: "version 1",
+			Tagger: &object.Signature{
+				Name:  "test",
+				Email: "test@example.com",
+			},
+		})
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.0.0", version.SemVer)
+		require.Equal(t, "1.0.0", version.DotNet)
+		require.Equal(t, "v1.0.0", version.JavaScript)
+		require.Equal(t, "1.0.0", version.Python)
+	})
+
+	t.Run("Repo with exact tag and dirty", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+		workTree, err := repo.Worktree()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		// Write a file but don't commit it
+		workDir := workTree.Filesystem
+		err = writeFile(workDir, "hello-world", "Hello World 2")
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.0.0+dirty", version.SemVer)
+		require.Equal(t, "1.0.0+dirty", version.DotNet)
+		require.Equal(t, "v1.0.0+dirty", version.JavaScript)
+		require.Equal(t, "1.0.0+dirty", version.Python)
 	})
 
 	t.Run("Repo with un-dotted alpha tag", func(t *testing.T) {

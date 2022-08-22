@@ -71,9 +71,7 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 
 	// Check the shorthash
 	var shortHash string
-	if omitCommitHash || isPrerelease {
-		shortHash = ""
-	} else {
+	if !omitCommitHash && !isPrerelease {
 		shortHash = fmt.Sprintf("+%s", versionComponents.ShortHash)
 	}
 
@@ -123,8 +121,13 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 
 	// Detect if the git worktree is dirty, and add `dirty` to the version if it is
 	if versionComponents.Dirty {
-		preVersion = fmt.Sprintf("%s.dirty", preVersion)
+		separator := "."
+		if shortHash == "" || preVersion == "" {
+			// If we didn't add a short hash or a preversion then we need to seperate with + not .
+			separator = "+"
+		}
 		pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
+		preVersion = fmt.Sprintf("%s%sdirty", preVersion, separator)
 	}
 
 	// a base version with the pre release info
@@ -287,6 +290,11 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash,
 
 	var exactTag *plumbing.Reference = nil
 	if err := tags.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Type() != plumbing.HashReference {
+			// Skip symbolic refs, for simplicity. We're not going to try and recursively resolve these.
+			return nil
+		}
+
 		refName := ref.Name().String()
 
 		// if we are marking the release as a pre-release, then we want to take into account
@@ -305,9 +313,24 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash,
 			return nil
 		}
 
-		if ref.Hash() == hash {
-			exactTag = ref
-			return storer.ErrStop
+		obj, err := repo.TagObject(ref.Hash())
+		switch err {
+		case nil:
+			// This is an annotated tag, check the hash of the target of the tag object
+			if obj.Target == hash {
+				exactTag = ref
+				return storer.ErrStop
+			}
+
+		case plumbing.ErrObjectNotFound:
+			// Not a tag object, pointing directly to the commit
+			if ref.Hash() == hash {
+				exactTag = ref
+				return storer.ErrStop
+			}
+
+		default:
+			return err
 		}
 
 		return nil
