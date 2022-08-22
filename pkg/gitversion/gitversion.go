@@ -80,27 +80,40 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 	// Python uses PEP440, but Pypi has some curiosities.
 	pythonPreVersion := ""
 	if len(genericVersion.Pre) != 0 {
-		var preSuffix int64
+		var preSuffix string
 
 		if !versionComponents.IsExact {
-			preSuffix = versionComponents.Timestamp.UTC().Unix()
+			preSuffix = fmt.Sprintf(".%d", versionComponents.Timestamp.UTC().Unix())
 		} else {
-			preSuffix = int64(versionComponents.Semver.Pre[1].VersionNum)
+			if len(versionComponents.Semver.Pre) > 1 {
+				preSuffix = fmt.Sprintf(".%d", versionComponents.Semver.Pre[1].VersionNum)
+			}
+		}
+
+		// PEP440 (https://peps.python.org/pep-0440/) says pre-release parts MUST have a number in them,
+		// but we want to support tags like `v1.0.0-alpha`. If no number is present add `0` to keep PEP440
+		// happy.
+		var pythonPreSuffix string
+		if preSuffix == "" {
+			pythonPreSuffix = "0"
+		} else {
+			// Trim the initial "."
+			pythonPreSuffix = preSuffix[1:]
 		}
 
 		switch genericVersion.Pre[0].VersionStr {
 		case "dev":
-			pythonPreVersion = fmt.Sprintf("dev%d", preSuffix)
-			preVersion = fmt.Sprintf("-dev.%d%s", preSuffix, shortHash)
+			pythonPreVersion = fmt.Sprintf("dev%s", pythonPreSuffix)
+			preVersion = fmt.Sprintf("-dev%s%s", preSuffix, shortHash)
 		case "alpha":
-			pythonPreVersion = fmt.Sprintf("a%d", preSuffix)
-			preVersion = fmt.Sprintf("-alpha.%d%s", preSuffix, shortHash)
+			pythonPreVersion = fmt.Sprintf("a%s", pythonPreSuffix)
+			preVersion = fmt.Sprintf("-alpha%s%s", preSuffix, shortHash)
 		case "beta":
-			pythonPreVersion = fmt.Sprintf("b%d", preSuffix)
-			preVersion = fmt.Sprintf("-beta.%d%s", preSuffix, shortHash)
+			pythonPreVersion = fmt.Sprintf("b%s", pythonPreSuffix)
+			preVersion = fmt.Sprintf("-beta%s%s", preSuffix, shortHash)
 		case "rc":
-			pythonPreVersion = fmt.Sprintf("rc%d", preSuffix)
-			preVersion = fmt.Sprintf("-rc.%d%s", preSuffix, shortHash)
+			pythonPreVersion = fmt.Sprintf("rc%s", pythonPreSuffix)
+			preVersion = fmt.Sprintf("-rc%s%s", preSuffix, shortHash)
 		default:
 			return nil, fmt.Errorf("prerelease string %q not valid semver string", genericVersion.Pre[0].VersionStr)
 		}
