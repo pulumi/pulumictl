@@ -71,11 +71,11 @@ func getPythonPreVersion(preVersion string) (string, error) {
 		remaining = strings.Replace(remaining, shortHash, "", 1)
 	}
 	// Find a number in the middle of non-words (- or .)
-	numRe := regexp.MustCompile(`\W(\d+)\W`)
+	numRe := regexp.MustCompile(`\W(\d+)(\W|$)`)
 	nums := numRe.FindStringSubmatch(remaining)
 	num := ""
 	// Our match group is in the 2nd array entry.
-	if len(nums) == 2 {
+	if len(nums) == 3 {
 		num = nums[1]
 	}
 
@@ -110,7 +110,7 @@ func getPythonPrePrefix(preVersion string) (string, string) {
 		return "d", preVersion[4:]
 	}
 	if strings.HasPrefix(preVersion, "-alpha") {
-		return "a", preVersion[5:]
+		return "a", preVersion[6:]
 	}
 	if strings.HasPrefix(preVersion, "-beta") {
 		return "b", preVersion[5:]

@@ -483,4 +483,29 @@ func TestGetVersion(t *testing.T) {
 		require.Equal(t, "v1.0.0-alpha", version.JavaScript)
 		require.Equal(t, "1.0.0a0", version.Python)
 	})
+
+	t.Run("Repo with dotted alpha tag marked for pre-release", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0-alpha.1",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			IsPreRelease: true,
+			Repo:         repo,
+			Commitish:    plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.0.0-alpha.1", version.SemVer)
+		require.Equal(t, "1.0.0-alpha.1", version.DotNet)
+		require.Equal(t, "v1.0.0-alpha.1", version.JavaScript)
+		require.Equal(t, "1.0.0a1", version.Python)
+	})
 }
