@@ -140,14 +140,6 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 	jsVersion := fmt.Sprintf("v%s", version)
 	dotnetVersion := version
 
-	newLanguageVersions, err := GetLanguageOptionsFromVersion(version)
-	if err != nil {
-		return nil, err
-	}
-	if newLanguageVersions.Python != pythonVersion {
-		return nil, fmt.Errorf("expected %q found %q for %q", newLanguageVersions.Python, pythonVersion, version)
-	}
-
 	return &LanguageVersions{
 		SemVer:     version,
 		Python:     pythonVersion,
