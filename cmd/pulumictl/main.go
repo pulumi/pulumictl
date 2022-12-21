@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	download_binary "github.com/pulumi/pulumictl/cmd/pulumictl/download-binary"
 	"os"
+
+	download_binary "github.com/pulumi/pulumictl/cmd/pulumictl/download-binary"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	convert_version "github.com/pulumi/pulumictl/cmd/pulumictl/convert-Version"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/copyright"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/cover"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/create"
@@ -39,6 +41,7 @@ func configureCLI() *cobra.Command {
 	rootCommand.AddCommand(cover.Command())
 	rootCommand.AddCommand(winget.Command())
 	rootCommand.AddCommand(download_binary.Command())
+	rootCommand.AddCommand(convert_version.Command())
 
 	rootCommand.PersistentFlags().StringVarP(&githubToken, "token", "t", "", "a github token to use for making API calls to GitHub.")
 	rootCommand.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "enable debug logging")
