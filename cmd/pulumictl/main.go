@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	convert_version "github.com/pulumi/pulumictl/cmd/pulumictl/convert-Version"
+	convert_version "github.com/pulumi/pulumictl/cmd/pulumictl/convert-version"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/copyright"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/cover"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/create"
