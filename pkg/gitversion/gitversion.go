@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -130,6 +131,14 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 		preVersion = fmt.Sprintf("%s%sdirty", preVersion, separator)
 	}
 
+	newPythonPreVersion, err := getPythonPreVersion(preVersion)
+	if err != nil {
+		return nil, err
+	}
+	if newPythonPreVersion != pythonPreVersion {
+		return nil, fmt.Errorf("expected %q found %q for %q", pythonPreVersion, newPythonPreVersion, preVersion)
+	}
+
 	// a base version with the pre release info
 	baseVersion := fmt.Sprintf("%d.%d.%d", genericVersion.Major, genericVersion.Minor, genericVersion.Patch)
 
@@ -145,6 +154,65 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 		JavaScript: jsVersion,
 		DotNet:     dotnetVersion,
 	}, nil
+}
+
+func getPythonPreVersion(preVersion string) (string, error) {
+	if preVersion == "" {
+		return preVersion, nil
+	}
+
+	prefix, rest := getPythonPrePrefix(preVersion)
+	// Find a number in the middle of non-words (- or .)
+	numRe := regexp.MustCompile(`\W(\d+)\W`)
+	nums := numRe.FindStringSubmatch(rest)
+	num := ""
+	// Our match group is in the 2nd array entry.
+	if len(nums) == 2 {
+		num = nums[1]
+	}
+
+	isDirty := strings.Contains(preVersion, "dirty")
+
+	// Python uses PEP440, but Pypi has some curiosities.
+	pythonPreVersion := ""
+
+	// PEP440 (https://peps.python.org/pep-0440/) says pre-release parts MUST have a number in them,
+	// but we want to support tags like `v1.0.0-alpha`. If no number is present add `0` to keep PEP440
+	// happy.
+	var pythonPreSuffix string
+	if num == "" {
+		pythonPreSuffix = "0"
+	} else {
+		// Trim the initial "."
+		pythonPreSuffix = num
+	}
+
+	if prefix != "" {
+		pythonPreVersion = fmt.Sprintf("%s%s", prefix, pythonPreSuffix)
+	}
+
+	// Detect if the git worktree is dirty, and add `dirty` to the version if it is
+	if isDirty {
+		pythonPreVersion = fmt.Sprintf("%s+dirty", pythonPreVersion)
+	}
+
+	return pythonPreVersion, nil
+}
+
+func getPythonPrePrefix(preVersion string) (string, string) {
+	if strings.HasPrefix(preVersion, "-dev") {
+		return "d", preVersion[4:]
+	}
+	if strings.HasPrefix(preVersion, "-alpha") {
+		return "a", preVersion[5:]
+	}
+	if strings.HasPrefix(preVersion, "-beta") {
+		return "b", preVersion[5:]
+	}
+	if strings.HasPrefix(preVersion, "-rc") {
+		return "rc", preVersion[3:]
+	}
+	return "", ""
 }
 
 // See GetLanguageVersionsWithOptions.
@@ -231,11 +299,11 @@ func versionAtCommitForRepo(repo *git.Repository, commitish plumbing.Revision, r
 
 // determineBaseVersion returns an appropriate semantic versionComponents by the following process:
 //
-// - If `commitish` has a tag exactly associated with it, the versionComponents component of the tag
-//   is returned.
-// - If `commitish` does not have an exact tag associated, the versionComponents component of the most
-//   recent exact tag is returned.
-// - Otherwise, "v0.0.0" is returned
+//   - If `commitish` has a tag exactly associated with it, the versionComponents component of the tag
+//     is returned.
+//   - If `commitish` does not have an exact tag associated, the versionComponents component of the most
+//     recent exact tag is returned.
+//   - Otherwise, "v0.0.0" is returned
 //
 // The second return value is true if an exact tag match was made.
 //
