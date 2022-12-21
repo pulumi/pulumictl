@@ -131,14 +131,6 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 		preVersion = fmt.Sprintf("%s%sdirty", preVersion, separator)
 	}
 
-	newPythonPreVersion, err := getPythonPreVersion(preVersion)
-	if err != nil {
-		return nil, err
-	}
-	if newPythonPreVersion != pythonPreVersion {
-		return nil, fmt.Errorf("expected %q found %q for %q", pythonPreVersion, newPythonPreVersion, preVersion)
-	}
-
 	// a base version with the pre release info
 	baseVersion := fmt.Sprintf("%d.%d.%d", genericVersion.Major, genericVersion.Minor, genericVersion.Patch)
 
@@ -148,6 +140,14 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 	jsVersion := fmt.Sprintf("v%s", version)
 	dotnetVersion := version
 
+	newLanguageVersions, err := GetLanguageOptionsFromVersion(version)
+	if err != nil {
+		return nil, err
+	}
+	if newLanguageVersions.Python != pythonVersion {
+		return nil, fmt.Errorf("expected %q found %q for %q", newLanguageVersions.Python, pythonVersion, version)
+	}
+
 	return &LanguageVersions{
 		SemVer:     version,
 		Python:     pythonVersion,
@@ -156,22 +156,78 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 	}, nil
 }
 
+func GetLanguageOptionsFromVersion(version string) (*LanguageVersions, error) {
+	// Strip leading "v" if present
+	normalised := version
+	if strings.HasPrefix(version, "v") {
+		normalised = version[1:]
+	}
+
+	parts := strings.SplitN(normalised, ".", 3)
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("version did not contain exactly 3 parts as expected: %q", version)
+	}
+
+	major := parts[0]
+	minor := parts[1]
+	patch := parts[2]
+
+	pythonPatch, err := convertPatchToPython(patch)
+	if err != nil {
+		return nil, err
+	}
+
+	genericVersion := fmt.Sprintf("%s.%s.%s", major, minor, patch)
+	pythonVersion := fmt.Sprintf("%s.%s.%s", major, minor, pythonPatch)
+	jsVersion := fmt.Sprintf("v%s", genericVersion)
+	dotnetVersion := genericVersion
+
+	return &LanguageVersions{
+		SemVer:     genericVersion,
+		Python:     pythonVersion,
+		JavaScript: jsVersion,
+		DotNet:     dotnetVersion,
+	}, nil
+}
+
+func convertPatchToPython(patch string) (string, error) {
+	re := regexp.MustCompile(`^(\d+)(.*)$`)
+	matches := re.FindStringSubmatch(patch)
+	if len(matches) != 3 {
+		return patch, nil
+	}
+	version := matches[1]
+	pre := matches[2]
+	pythonPre, err := getPythonPreVersion(pre)
+	return version + pythonPre, err
+}
+
 func getPythonPreVersion(preVersion string) (string, error) {
 	if preVersion == "" {
 		return preVersion, nil
 	}
 
-	prefix, rest := getPythonPrePrefix(preVersion)
+	prefix, remaining := getPythonPrePrefix(preVersion)
+
+	isDirty := strings.Contains(preVersion, "dirty")
+	if isDirty {
+		remaining = strings.Replace(remaining, "dirty", "", 1)
+	}
+
+	// Find the hash and remove to make sure we don't pick up the hash as a number
+	hashRe := regexp.MustCompile(`[0-9a-f]{8}`)
+	shortHash := hashRe.FindString(remaining)
+	if shortHash != "" {
+		remaining = strings.Replace(remaining, shortHash, "", 1)
+	}
 	// Find a number in the middle of non-words (- or .)
 	numRe := regexp.MustCompile(`\W(\d+)\W`)
-	nums := numRe.FindStringSubmatch(rest)
+	nums := numRe.FindStringSubmatch(remaining)
 	num := ""
 	// Our match group is in the 2nd array entry.
 	if len(nums) == 2 {
 		num = nums[1]
 	}
-
-	isDirty := strings.Contains(preVersion, "dirty")
 
 	// Python uses PEP440, but Pypi has some curiosities.
 	pythonPreVersion := ""
