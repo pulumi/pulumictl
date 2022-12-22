@@ -16,11 +16,6 @@ type versionTest struct {
 func TestConversions(t *testing.T) {
 	inputs := []versionTest{
 		{
-			desc:   "Repo with exact tag",
-			semver: "1.0.0",
-			python: "1.0.0",
-		},
-		{
 			semver: "0.0.0",
 			python: "0.0.0",
 		},
@@ -30,14 +25,14 @@ func TestConversions(t *testing.T) {
 			python: "0.0.1a0",
 		},
 		{
-			desc:   "Repo with no tags",
-			semver: "0.0.1-alpha.0+68804cfa",
-			python: "0.0.1a0",
+			desc:   "Repo with exact tag",
+			semver: "1.0.0",
+			python: "1.0.0",
 		},
 		{
 			desc:   "Repo with with commit after tag",
-			semver: "0.0.1-alpha.0+68804cfa",
-			python: "0.0.1a0",
+			semver: "1.1.0-alpha.0+9fa804e8",
+			python: "1.1.0a0",
 		},
 		{
 			desc:   "Repo with with commit after tag and dirty",
