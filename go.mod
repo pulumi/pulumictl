@@ -4,6 +4,8 @@ go 1.18
 
 replace github.com/fsnotify/fsnotify v1.6.0 => ./fsnotify
 
+replace github.com/rjeczalik/notify v0.9.2 => ./notify
+
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bmatcuk/doublestar v1.3.4
