@@ -231,11 +231,11 @@ func versionAtCommitForRepo(repo *git.Repository, commitish plumbing.Revision, r
 
 // determineBaseVersion returns an appropriate semantic versionComponents by the following process:
 //
-// - If `commitish` has a tag exactly associated with it, the versionComponents component of the tag
-//   is returned.
-// - If `commitish` does not have an exact tag associated, the versionComponents component of the most
-//   recent exact tag is returned.
-// - Otherwise, "v0.0.0" is returned
+//   - If `commitish` has a tag exactly associated with it, the versionComponents component of the tag
+//     is returned.
+//   - If `commitish` does not have an exact tag associated, the versionComponents component of the most
+//     recent exact tag is returned.
+//   - Otherwise, "v0.0.0" is returned
 //
 // The second return value is true if an exact tag match was made.
 //
