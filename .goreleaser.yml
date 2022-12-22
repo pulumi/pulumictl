@@ -3,7 +3,7 @@ before:
     - go mod download
 builds:
 - env:
-  - CGO_ENABLED=1
+  - CGO_ENABLED=0
   goos:
     - darwin
     - windows
@@ -26,7 +26,7 @@ changelog:
 release:
   prerelease: auto
 brews:
-  - 
+  -
     name: pulumictl
     tap:
       owner: pulumi
