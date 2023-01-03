@@ -16,10 +16,8 @@ import (
 )
 
 var (
-	githubToken string
 	org         string
 	repo        string
-	ref         string
 	category    string
 	displayName string
 	component   bool
@@ -53,9 +51,8 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
-			githubToken = viper.GetString("token")
+			githubToken := viperlib.GetString("token")
 			org = viper.GetString("org")
-			ref = viper.GetString("ref")
 			docsRepo := "pulumi/registry"
 			project := args[0]
 			ref := args[1]
