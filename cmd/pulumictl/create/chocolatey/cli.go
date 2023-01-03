@@ -11,7 +11,7 @@ import (
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
@@ -30,6 +30,7 @@ type Payload struct {
 const eventType = "choco-deploy"
 
 func Command() *cobra.Command {
+	viper := viperlib.New()
 	command := &cobra.Command{
 		Use:   "choco-deploy [tag]",
 		Short: "Create a Chocolatey Deployment",

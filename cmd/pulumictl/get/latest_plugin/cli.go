@@ -8,7 +8,7 @@ import (
 
 	"github.com/pulumi/pulumictl/pkg/pluginversion"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
@@ -19,6 +19,7 @@ var (
 )
 
 func Command() *cobra.Command {
+	viper := viperlib.New()
 	command := &cobra.Command{
 		Use:   "latest-plugin [provider]",
 		Short: "Get the latest available plugin",

@@ -10,7 +10,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
@@ -22,6 +22,7 @@ var (
 )
 
 func Command() *cobra.Command {
+	viper := viperlib.New()
 	command := &cobra.Command{
 		Use:   "version",
 		Short: "Calculate versions",

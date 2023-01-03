@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-github/v32/github"
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
@@ -20,6 +20,7 @@ var (
 const eventType = "winget-deploy"
 
 func Command() *cobra.Command {
+	viper := viperlib.New()
 	command := &cobra.Command{
 		Use:   "winget-deploy",
 		Short: "Create a WinGet Deployment",

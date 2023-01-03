@@ -11,7 +11,7 @@ import (
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
@@ -29,6 +29,7 @@ type Payload struct {
 const eventType = "oss-sdk"
 
 func Command() *cobra.Command {
+	viper := viperlib.New()
 	command := &cobra.Command{
 		Use:   "oss-sdk [gitRef]",
 		Short: "Publish the Azure Nextgen Provider SDK",
