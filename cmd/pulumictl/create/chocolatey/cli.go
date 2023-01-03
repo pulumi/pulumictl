@@ -18,7 +18,6 @@ var (
 	githubToken string
 	org         string
 	repo        string
-	ref         string
 	tokenClient *http.Client
 	app         string
 )
@@ -39,9 +38,8 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
-			githubToken = viper.GetString("token")
+			githubToken = viperlib.GetString("token")
 			org = viper.GetString("org")
-			ref = viper.GetString("ref")
 			containerRepo := "pulumi/pulumi-chocolatey"
 			ref := args[0]
 
