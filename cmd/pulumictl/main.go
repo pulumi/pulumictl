@@ -7,7 +7,7 @@ import (
 	download_binary "github.com/pulumi/pulumictl/cmd/pulumictl/download-binary"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 
 	convert_version "github.com/pulumi/pulumictl/cmd/pulumictl/convert-version"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/copyright"
@@ -27,6 +27,9 @@ var (
 )
 
 func configureCLI() *cobra.Command {
+	// Using the shared global Viper instance for the top-level command. Sub-commands should use viperlib.New().
+	viper := viperlib.GetViper()
+
 	rootCommand := &cobra.Command{
 		Use:  "pulumictl",
 		Long: "A swiss army knife for Pulumi development",

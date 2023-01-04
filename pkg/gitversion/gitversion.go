@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 
 	"github.com/blang/semver"
 	"github.com/go-git/go-git/v5"
@@ -373,7 +373,8 @@ func mostRecentTag(repo *git.Repository, ref plumbing.Hash, isPrerelease bool,
 // workTreeIsDirty returns whether the worktree associated with the given repository
 // has local modifications.
 func workTreeIsDirty(repo *git.Repository) (bool, error) {
-	debug := viper.GetBool("debug")
+	// Using global viper state as "debug" is defined on the global Viper in main.go.
+	debug := viperlib.GetBool("debug")
 	workTree, err := repo.Worktree()
 	if err != nil {
 		return false, fmt.Errorf("looking up worktree: %w", err)

@@ -9,11 +9,10 @@ import (
 	"github.com/google/go-github/v32/github"
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
-	githubToken string
 	tokenClient *http.Client
 )
 
@@ -28,7 +27,7 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
-			githubToken = viper.GetString("token")
+			githubToken := viperlib.GetString("token")
 			containerRepo := "pulumi/pulumi-winget"
 			// perform some string manipulation and validation
 			containerRepoArray := strings.Split(containerRepo, "/")

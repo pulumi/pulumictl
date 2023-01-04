@@ -12,11 +12,10 @@ import (
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
-	githubToken string
 	org         string
 	repo        string
 	ref         string
@@ -28,6 +27,8 @@ type Payload struct {
 }
 
 func Command() *cobra.Command {
+	viper := viperlib.New()
+
 	command := &cobra.Command{
 		Use:   "dispatch [ref]",
 		Short: "Send a command dispatch event with a ref",
@@ -36,9 +37,8 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
-			githubToken = viper.GetString("token")
+			githubToken := viperlib.GetString("token")
 			org = viper.GetString("org")
-			ref = viper.GetString("ref")
 			repo := viper.GetString("repo")
 			command := viper.GetString("command")
 			ref := args[0]

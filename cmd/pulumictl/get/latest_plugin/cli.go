@@ -8,14 +8,13 @@ import (
 
 	"github.com/pulumi/pulumictl/pkg/pluginversion"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
 	version     string
 	exists      bool
 	tagsToCheck []string
-	githubToken string
 )
 
 func Command() *cobra.Command {
@@ -30,7 +29,7 @@ func Command() *cobra.Command {
 			org, _ := cmd.Flags().GetString("org")
 			numOfTagsToCheck, _ := cmd.Flags().GetInt("num-tags")
 			project := args[0]
-			githubToken = viper.GetString("token")
+			githubToken := viperlib.GetString("token")
 
 			// create a github client and token
 			ctx, client := gh.CreateGithubClient(githubToken)

@@ -11,14 +11,12 @@ import (
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
-	githubToken string
 	org         string
 	repo        string
-	ref         string
 	tokenClient *http.Client
 )
 
@@ -29,6 +27,7 @@ type Payload struct {
 const eventType = "oss-sdk"
 
 func Command() *cobra.Command {
+	viper := viperlib.New()
 	command := &cobra.Command{
 		Use:   "oss-sdk [gitRef]",
 		Short: "Publish the Azure Nextgen Provider SDK",
@@ -37,9 +36,9 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
-			githubToken = viper.GetString("token")
+			githubToken := viperlib.GetString("token")
 			org = viper.GetString("org")
-			ref = viper.GetString("ref")
+
 			containerRepo := "pulumi/pulumi-azure-nextgen"
 			ref := args[0]
 

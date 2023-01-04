@@ -11,14 +11,12 @@ import (
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	viperlib "github.com/spf13/viper"
 )
 
 var (
-	githubToken string
 	org         string
 	repo        string
-	ref         string
 	commitsha   string
 	tokenClient *http.Client
 )
@@ -31,6 +29,8 @@ type Payload struct {
 const eventType = "homebrew-bump"
 
 func Command() *cobra.Command {
+	viper := viperlib.New()
+
 	command := &cobra.Command{
 		Use:   "homebrew-bump [tag]",
 		Short: "Create a Homebrew deployment",
@@ -39,7 +39,7 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
-			githubToken = viper.GetString("token")
+			githubToken := viperlib.GetString("token")
 			org = viper.GetString("org")
 			homebrewRepo := "pulumi/pulumi"
 			ref := args[0]
