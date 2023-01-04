@@ -13,14 +13,12 @@ import (
 )
 
 var (
-	githubToken string
 	tokenClient *http.Client
 )
 
 const eventType = "winget-deploy"
 
 func Command() *cobra.Command {
-	viper := viperlib.New()
 	command := &cobra.Command{
 		Use:   "winget-deploy",
 		Short: "Create a WinGet Deployment",
@@ -29,7 +27,7 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
-			githubToken = viper.GetString("token")
+			githubToken := viperlib.GetString("token")
 			containerRepo := "pulumi/pulumi-winget"
 			// perform some string manipulation and validation
 			containerRepoArray := strings.Split(containerRepo, "/")
