@@ -374,8 +374,7 @@ func mostRecentTag(repo *git.Repository, ref plumbing.Hash, isPrerelease bool,
 // has local modifications.
 func workTreeIsDirty(repo *git.Repository) (bool, error) {
 	// Using global viper state as "debug" is defined on the global Viper in main.go.
-	viper := viperlib.GetViper()
-	debug := viper.GetBool("debug")
+	debug := viperlib.GetBool("debug")
 	workTree, err := repo.Worktree()
 	if err != nil {
 		return false, fmt.Errorf("looking up worktree: %w", err)
