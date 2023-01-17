@@ -24,6 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
       - name: Chocolatey Package Deployment
         run: |
+          make install
           CURRENT_TAG=$(pulumictl get version --language generic -o)
           pulumictl create choco-deploy -a pulumictl ${CURRENT_TAG}
         env:
