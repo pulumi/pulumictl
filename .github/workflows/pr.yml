@@ -18,4 +18,4 @@ jobs:
       - name: Install and run
         run: |
           make install
-          pulumictl get version --language generic -o
+          pulumictl convert-version -v 0.0.1+dev -l python
