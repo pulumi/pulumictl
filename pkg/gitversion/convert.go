@@ -65,7 +65,7 @@ func getPythonPreVersion(preVersion string) (string, error) {
 	}
 
 	// Find the hash and remove to make sure we don't pick up the hash as a number
-	hashRe := regexp.MustCompile(`\b[0-9a-f]{8}\b`)
+	hashRe := regexp.MustCompile(`\+[0-9a-f]{8}\b`)
 	hashMatches := hashRe.FindAllString(remaining, 5)
 	if len(hashMatches) > 0 {
 		// Use the last match in case the build number is also exactly 8 digits long.

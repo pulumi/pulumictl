@@ -89,6 +89,11 @@ func TestConversions(t *testing.T) {
 			semver: "1.93.1-alpha.1675198718+c586f7b1",
 			python: "1.93.1a1675198718",
 		},
+		{
+			desc:   "Master prerelease dirty",
+			semver: "1.93.1-alpha.1675198718+c586f7b1.dirty",
+			python: "1.93.1a1675198718+dirty",
+		},
 	}
 	for _, v := range inputs {
 		javascript := "v" + v.semver
