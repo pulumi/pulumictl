@@ -65,9 +65,11 @@ func getPythonPreVersion(preVersion string) (string, error) {
 	}
 
 	// Find the hash and remove to make sure we don't pick up the hash as a number
-	hashRe := regexp.MustCompile(`[0-9a-f]{8}`)
-	shortHash := hashRe.FindString(remaining)
-	if shortHash != "" {
+	hashRe := regexp.MustCompile(`\+[0-9a-f]{8}\b`)
+	hashMatches := hashRe.FindAllString(remaining, 5)
+	if len(hashMatches) > 0 {
+		// Use the last match in case the build number is also exactly 8 digits long.
+		shortHash := hashMatches[len(hashMatches)-1]
 		remaining = strings.Replace(remaining, shortHash, "", 1)
 	}
 	// Find a number in the middle of non-words (- or .)
