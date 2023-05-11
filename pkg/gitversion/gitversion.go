@@ -56,6 +56,8 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 	genericVersion.Major = versionComponents.Semver.Major
 	genericVersion.Minor = versionComponents.Semver.Minor
 	genericVersion.Patch = versionComponents.Semver.Patch
+	genericVersion.Build = versionComponents.Semver.Build
+
 	if len(versionComponents.Semver.Pre) == 1 {
 		genericVersion.Pre = []semver.PRVersion{
 			versionComponents.Semver.Pre[0],
@@ -130,12 +132,23 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 		preVersion = fmt.Sprintf("%s%sdirty", preVersion, separator)
 	}
 
+	buildVersion := []byte{}
+	if len(genericVersion.Build) > 0 {
+		buildVersion = append(buildVersion, '+')
+		buildVersion = append(buildVersion, genericVersion.Build[0]...)
+
+		for _, build := range genericVersion.Build[1:] {
+			buildVersion = append(buildVersion, '.')
+			buildVersion = append(buildVersion, build...)
+		}
+	}
+
 	// a base version with the pre release info
 	baseVersion := fmt.Sprintf("%d.%d.%d", genericVersion.Major, genericVersion.Minor, genericVersion.Patch)
 
 	// calculate versions for all languages
-	version := fmt.Sprintf("%s%s", baseVersion, preVersion)
-	pythonVersion := fmt.Sprintf("%s%s", baseVersion, pythonPreVersion)
+	version := fmt.Sprintf("%s%s%s", baseVersion, preVersion, buildVersion)
+	pythonVersion := fmt.Sprintf("%s%s%s", baseVersion, pythonPreVersion, buildVersion)
 	jsVersion := fmt.Sprintf("v%s", version)
 	dotnetVersion := version
 
