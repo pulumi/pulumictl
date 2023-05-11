@@ -532,4 +532,28 @@ func TestGetVersion(t *testing.T) {
 		require.Equal(t, "v1.0.0+1", version.JavaScript)
 		require.Equal(t, "1.0.0+1", version.Python)
 	})
+
+	t.Run("Repo with complicated build info tag", func(t *testing.T) {
+		repo, err := testRepoCreate()
+		require.NoError(t, err)
+
+		tagSequence := []string{
+			"v1.0.0+1abc.345.whoop",
+		}
+
+		repo, err = testRepoWithTags(repo, tagSequence)
+		require.NoError(t, err)
+
+		opts := LanguageVersionsOptions{
+			Repo:      repo,
+			Commitish: plumbing.Revision("HEAD"),
+		}
+		version, err := GetLanguageVersionsWithOptions(opts)
+		require.NoError(t, err)
+
+		require.Equal(t, "1.0.0+1abc.345.whoop", version.SemVer)
+		require.Equal(t, "1.0.0+1abc.345.whoop", version.DotNet)
+		require.Equal(t, "v1.0.0+1abc.345.whoop", version.JavaScript)
+		require.Equal(t, "1.0.0+1abc.345.whoop", version.Python)
+	})
 }
