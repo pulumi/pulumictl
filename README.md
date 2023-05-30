@@ -1,6 +1,6 @@
 # `pulumictl` - A Swiss Army Knife for Pulumi Development
 
-`pulumictl` is a utility CLI to support publishing Pulumi packages (providers, policy packs, etc.) This tool provides utility functions to replace shell scripts. If you are looking to author programs in Pulumi or find the Pulumi CLI & engine, visit [pulumi.com](https://www.pulumi.com) or [github.com/pulumi/pulumi](https://github.com/pulumi/pulumi) respectively.
+`pulumictl` is a utility CLI to support publishing Pulumi packages (providers, policy packs, etc.) This tool provides utility functions to replace shell scripts. If you are looking to author programs in Pulumi or find the Pulumi CLI & engine, visit [Pulumi docs](https://www.pulumi.com/docs) or [github.com/pulumi/pulumi](https://github.com/pulumi/pulumi) respectively.
 
 ## Usage
 
