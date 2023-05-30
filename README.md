@@ -1,10 +1,37 @@
 # `pulumictl` - A Swiss Army Knife for Pulumi Development
 
-`pulumictl` is a utility with an intial aim of replacing all Bash, Python and Go scripts used for developing Pulumi, which are often duplicated (un-updated) across repositories. It will do this via the proven "Embrace - Extend - Extinguish" methodology, providing a single binary available via Homebrew (through a custom tap) or GitHub releases for several platforms.
+`pulumictl` is a utility CLI to support publishing Pulumi packages (providers, policy packs, etc.) This tool provides utility functions to replace shell scripts. If you are looking to author programs in Pulumi or find the Pulumi CLI & engine, visit [pulumi.com](https://www.pulumi.com) or [github.com/pulumi/pulumi](https://github.com/pulumi/pulumi) respectively.
 
-The eventual aim is to provide a utility capable of performing hermetic builds of Pulumi components both locally and in Continuous Integration in order to remove variability and frustration from developer environments.
+## Usage
 
-_*Important Note:* This tool is only intended for use by people working on Pulumi itself, not for those using Pulumi to provision infrastructure!_
+```
+$ pulumictl --help
+A swiss army knife for Pulumi development
+
+Usage:
+  pulumictl [command]
+
+Available Commands:
+  completion      Generate the autocompletion script for the specified shell
+  convert-version Convert versions
+  copyright       Check copyright notices
+  cover           Manipulate coverage profiles
+  create          Create commands
+  dispatch        Send a command dispatch event with a ref
+  download-binary Downloads a version of a specific binary
+  generate        Runs code generator over a schema
+  get             Get commands
+  help            Help about any command
+  version         Get the current version
+  winget-deploy   Create a WinGet Deployment
+
+Flags:
+  -D, --debug          enable debug logging
+  -h, --help           help for pulumictl
+  -t, --token string   a github token to use for making API calls to GitHub.
+
+Use "pulumictl [command] --help" for more information about a command.
+```
 
 ## Installation
 
