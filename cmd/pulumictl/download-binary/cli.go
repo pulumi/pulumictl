@@ -47,7 +47,7 @@ func Command() *cobra.Command {
 
 			cwd, err := os.Getwd()
 			if err != nil {
-				return fmt.Errorf("unablle to detect current working directory")
+				return fmt.Errorf("unable to detect current working directory: %w", err)
 			}
 			srcFile := fmt.Sprintf("%s/bin/%s", cwd, filename)
 
@@ -57,6 +57,9 @@ func Command() *cobra.Command {
 			}
 
 			err = decompressBinary(srcFile, cwd)
+			if err != nil {
+				return err
+			}
 
 			return os.Remove(srcFile)
 		}),
@@ -86,7 +89,7 @@ func downloadBinary(url, destFile string) error {
 	defer response.Body.Close()
 
 	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return fmt.Errorf("unable to find URL: %q, received non 200 response code: %v", url, response.StatusCode)
+		return fmt.Errorf("unable to retrieve URL: %q, received non 200 response code: %v", url, response.StatusCode)
 	}
 
 	out, err := os.Create(destFile)
