@@ -36,7 +36,7 @@ func Command() *cobra.Command {
 
 			tags, _, err := client.Repositories.ListTags(ctx, org, project, nil)
 			if err != nil {
-				return fmt.Errorf("unable to list tags from GitHub: %w\n", err)
+				return fmt.Errorf("unable to list tags from GitHub: %w", err)
 			}
 
 			for t := 0; t < numOfTagsToCheck; t++ {
@@ -45,7 +45,7 @@ func Command() *cobra.Command {
 
 			result, err := pluginversion.CheckPluginTags(project, tagsToCheck)
 			if err != nil {
-				return fmt.Errorf("unable to get plugin tags: %w\n", err)
+				return fmt.Errorf("unable to get plugin tags: %w", err)
 			}
 
 			fmt.Println(strings.TrimPrefix(result, "v"))

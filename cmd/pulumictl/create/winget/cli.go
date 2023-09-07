@@ -58,7 +58,7 @@ func Command() *cobra.Command {
 				})
 
 			if err != nil {
-				return fmt.Errorf("unable to create dispatch event: %w\n", err)
+				return fmt.Errorf("unable to create dispatch event: %w", err)
 			}
 
 			fmt.Println("Submitting dispatch event to:", containerRepo)

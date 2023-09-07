@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-github/v32/github"
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
+	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
 	viperlib "github.com/spf13/viper"
 )
@@ -47,13 +48,15 @@ func Command() *cobra.Command {
 
 			// if the string split doesn't return 2 values, it's probably not right
 			if len(docsRepoArray) != 2 {
-				return fmt.Errorf("unable to use docs repo: format must be <org>/<repo> - value: %s\n", docsRepo)
+				return fmt.Errorf("unable to use docs repo:"+
+					" format must be <org>/<repo> - value: %s",
+					docsRepo)
 			}
 
 			_, err := semver.Parse(gitversion.StripModuleTagPrefixes(ref))
 
 			if err != nil {
-				return fmt.Errorf("must specify a valid semver ref - value: %s\n", ref)
+				return fmt.Errorf("must specify a valid semver ref - value: %s", ref)
 			}
 
 			// create a github client and token
@@ -79,7 +82,7 @@ func Command() *cobra.Command {
 				})
 
 			if err != nil {
-				return fmt.Errorf("unable to create dispatch event: %w\n", err)
+				return fmt.Errorf("unable to create dispatch event: %w", err)
 			}
 
 			// output stuff
@@ -94,10 +97,10 @@ func Command() *cobra.Command {
 	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
 	command.Flags().StringP("docs-repo", "d", "pulumi/docs", "the docs repository to send in the payload")
 
-	viper.BindEnv("org", "GITHUB_ORG")
-	viper.BindEnv("docs-repo", "GITHUB_DOCS_REPO")
-	viper.BindPFlag("org", command.Flags().Lookup("org"))
-	viper.BindPFlag("docs-repo", command.Flags().Lookup("docs-repo"))
+	util.NoErr(viper.BindEnv("org", "GITHUB_ORG"))
+	util.NoErr(viper.BindEnv("docs-repo", "GITHUB_DOCS_REPO"))
+	util.NoErr(viper.BindPFlag("org", command.Flags().Lookup("org")))
+	util.NoErr(viper.BindPFlag("docs-repo", command.Flags().Lookup("docs-repo")))
 
 	return command
 }

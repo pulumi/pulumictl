@@ -19,6 +19,7 @@ import (
 	"github.com/pulumi/pulumictl/cmd/pulumictl/get"
 	"github.com/pulumi/pulumictl/cmd/pulumictl/version"
 	"github.com/pulumi/pulumictl/pkg/contract"
+	"github.com/pulumi/pulumictl/pkg/util"
 )
 
 var (
@@ -49,9 +50,9 @@ func configureCLI() *cobra.Command {
 	rootCommand.PersistentFlags().StringVarP(&githubToken,
 		"token", "t", "", "a github token to use for making API calls to GitHub.")
 	rootCommand.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "enable debug logging")
-	viper.BindEnv("debug", "PULUMICTL_DEBUG")
-	viper.BindEnv("token", "GITHUB_TOKEN")
-	viper.BindPFlag("debug", rootCommand.PersistentFlags().Lookup("debug"))
+	util.NoErr(viper.BindEnv("debug", "PULUMICTL_DEBUG"))
+	util.NoErr(viper.BindEnv("token", "GITHUB_TOKEN"))
+	util.NoErr(viper.BindPFlag("debug", rootCommand.PersistentFlags().Lookup("debug")))
 
 	return rootCommand
 }

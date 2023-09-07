@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-github/v32/github"
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
+	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
 	viperlib "github.com/spf13/viper"
 )
@@ -34,8 +35,9 @@ func Command() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "homebrew-bump [tag]",
 		Short: "Create a Homebrew deployment",
-		Long:  `Send a repository dispatch payload to the pulumi repo that triggers the deployment of a homebrew formulae bump`,
-		Args:  cobra.ExactArgs(2),
+		Long: "Send a repository dispatch payload to the pulumi repo that triggers" +
+			" the deployment of a homebrew formulae bump",
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
@@ -50,13 +52,13 @@ func Command() *cobra.Command {
 
 			// if the string split doesn't return 2 values, it's probably not right
 			if len(containerRepoArray) != 2 {
-				return fmt.Errorf("unable to use container repo: format must be <org>/<repo> - value: %s\n", homebrewRepo)
+				return fmt.Errorf("unable to use container repo: format must be <org>/<repo> - value: %s", homebrewRepo)
 			}
 
 			_, err := semver.Parse(gitversion.StripModuleTagPrefixes(ref))
 
 			if err != nil {
-				return fmt.Errorf("must specify a valid semver ref - value: %s\n", ref)
+				return fmt.Errorf("must specify a valid semver ref - value: %s", ref)
 			}
 
 			// create a github client and token
@@ -83,7 +85,7 @@ func Command() *cobra.Command {
 				})
 
 			if err != nil {
-				return fmt.Errorf("unable to create dispatch event: %w\n", err)
+				return fmt.Errorf("unable to create dispatch event: %w", err)
 			}
 
 			// output stuff
@@ -97,8 +99,8 @@ func Command() *cobra.Command {
 
 	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
 
-	viper.BindEnv("org", "GITHUB_ORG")
-	viper.BindPFlag("org", command.Flags().Lookup("org"))
+	util.NoErr(viper.BindEnv("org", "GITHUB_ORG"))
+	util.NoErr(viper.BindPFlag("org", command.Flags().Lookup("org")))
 
 	return command
 }

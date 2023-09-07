@@ -26,6 +26,7 @@ import (
 	"runtime"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/cmdutil"
+	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -74,9 +75,9 @@ func Command() *cobra.Command {
 		"host", "https://github.com", "The host of the repo to download from. "+
 			"Defaults to https://github.com")
 
-	cmd.MarkFlagRequired("repo-slug")
-	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("version")
+	util.NoErr(cmd.MarkFlagRequired("repo-slug"))
+	util.NoErr(cmd.MarkFlagRequired("name"))
+	util.NoErr(cmd.MarkFlagRequired("version"))
 
 	return cmd
 }

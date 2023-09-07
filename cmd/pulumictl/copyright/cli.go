@@ -115,7 +115,7 @@ Files missing a Copyright notice:
 			fmt.Printf("%s\n", f)
 		}
 
-		return fmt.Errorf("Found %d source files missing a Copyright notice\n", len(files))
+		return fmt.Errorf("found %d source files missing a Copyright notice", len(files))
 	}
 	return nil
 }
