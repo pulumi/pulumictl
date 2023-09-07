@@ -1,16 +1,17 @@
 ROOT_DIR := $(shell pwd)
 
 
+bin:
+	mkdir -p bin
 
-build:
-	cd cmd/pulumictl && go build
-	mv cmd/pulumictl/pulumictl ${ROOT_DIR}/
+build: bin
+	go build -C cmd/pulumictl -o ${ROOT_DIR}/bin
 
 install:
-	cd cmd/pulumictl && go install
+	go -C cmd/pulumictl install
 
 clean:
-	rm -f pulumictl
+	rm -rf bin
 
 lint:
 	cd cmd && golangci-lint run -c ../.golangci.yml --timeout 5m
