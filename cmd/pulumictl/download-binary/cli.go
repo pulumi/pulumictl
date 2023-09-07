@@ -43,7 +43,7 @@ func Command() *cobra.Command {
 			"\nThis will download a version of binary to a specific location.",
 		Run: cmdutil.RunFunc(func(cmd *cobra.Command, args []string) error {
 			filename := fmt.Sprintf("%s-%s-%s-%s.tar.gz", name, version, runtime.GOOS, runtime.GOARCH)
-			downloadUrl := fmt.Sprintf("%s/%s/releases/download/%s/%s", host, repoSlug, version, filename)
+			downloadURL := fmt.Sprintf("%s/%s/releases/download/%s/%s", host, repoSlug, version, filename)
 
 			cwd, err := os.Getwd()
 			if err != nil {
@@ -51,7 +51,7 @@ func Command() *cobra.Command {
 			}
 			srcFile := fmt.Sprintf("%s/bin/%s", cwd, filename)
 
-			err = downloadBinary(downloadUrl, srcFile)
+			err = downloadBinary(downloadURL, srcFile)
 			if err != nil {
 				return err
 			}

@@ -46,7 +46,8 @@ func configureCLI() *cobra.Command {
 	rootCommand.AddCommand(download_binary.Command())
 	rootCommand.AddCommand(convert_version.Command())
 
-	rootCommand.PersistentFlags().StringVarP(&githubToken, "token", "t", "", "a github token to use for making API calls to GitHub.")
+	rootCommand.PersistentFlags().StringVarP(&githubToken,
+		"token", "t", "", "a github token to use for making API calls to GitHub.")
 	rootCommand.PersistentFlags().BoolVarP(&debug, "debug", "D", false, "enable debug logging")
 	viper.BindEnv("debug", "PULUMICTL_DEBUG")
 	viper.BindEnv("token", "GITHUB_TOKEN")

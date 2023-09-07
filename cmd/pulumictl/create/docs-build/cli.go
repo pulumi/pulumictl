@@ -28,7 +28,7 @@ var (
 
 type Payload struct {
 	Repo             string `json:"repo"`
-	Org              string `json:"org"'`
+	Org              string `json:"org"`
 	Project          string `json:"project"`
 	ProjectShortname string `json:"project-shortname"`
 	Ref              string `json:"ref"`

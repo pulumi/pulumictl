@@ -160,7 +160,8 @@ func coverCommand() *cobra.Command {
 		},
 	}
 
-	command.PersistentFlags().StringVarP(&inPath, "in", "i", "", "the path to the directory containing coverage data to merge")
+	command.PersistentFlags().StringVarP(&inPath,
+		"in", "i", "", "the path to the directory containing coverage data to merge")
 	command.PersistentFlags().StringVarP(&outPath, "out", "o", "", "the path to the output file")
 
 	return command
