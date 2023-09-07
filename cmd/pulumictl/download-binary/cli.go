@@ -75,9 +75,9 @@ func Command() *cobra.Command {
 		"host", "https://github.com", "The host of the repo to download from. "+
 			"Defaults to https://github.com")
 
-	util.NoErr(cmd.MarkFlagRequired("repo-slug"))
-	util.NoErr(cmd.MarkFlagRequired("name"))
-	util.NoErr(cmd.MarkFlagRequired("version"))
+	util.Ignore(cmd.MarkFlagRequired("repo-slug"))
+	util.Ignore(cmd.MarkFlagRequired("name"))
+	util.Ignore(cmd.MarkFlagRequired("version"))
 
 	return cmd
 }
