@@ -57,6 +57,9 @@ func Command() *cobra.Command {
 			}
 
 			err = decompressBinary(srcFile, cwd)
+			if err != nil {
+				return err
+			}
 
 			return os.Remove(srcFile)
 		}),
