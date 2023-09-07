@@ -3,20 +3,18 @@ run:
 linters:
   enable-all: false
   enable:
-    - deadcode
+    - revive
+    - unused
     - errcheck
     - goconst
     - gofmt
-    - golint
     - gosec
     - govet
     - ineffassign
     - lll
     - misspell
     - nakedret
-    - structcheck
     - unconvert
-    - varcheck
   disable:
     - staticcheck # Disabled due to OOM errors in golangci-lint@v1.18.0
     - megacheck # Disabled due to OOM errors in golangci-lint@v1.18.0

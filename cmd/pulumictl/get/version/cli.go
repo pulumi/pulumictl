@@ -9,6 +9,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
+	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
 	viperlib "github.com/spf13/viper"
 )
@@ -104,23 +105,25 @@ func Command() *cobra.Command {
 
 	command.Flags().StringP("repo", "r", "", "path to repository, defaults to current working directory")
 	command.Flags().StringVarP(&language, "language", "p", "", "the platform for which the version should be output.")
-	command.Flags().StringVar(&versionPrefix, "version-prefix", "", "the version prefix (e.g. 3.0.0). Must be valid semver.")
-	command.Flags().BoolVarP(&omitCommitHash, "omit-commit-hash", "o", false, "whether to include or omit the commit hash in the version")
+	command.Flags().StringVar(&versionPrefix,
+		"version-prefix", "", "the version prefix (e.g. 3.0.0). Must be valid semver.")
+	command.Flags().BoolVarP(&omitCommitHash,
+		"omit-commit-hash", "o", false, "whether to include or omit the commit hash in the version")
 	command.Flags().BoolVar(&isPreRelease, "is-prerelease", false, "whether this is a pre-release version")
 	command.Flags().StringVar(&tagPattern, "tag-pattern", "", "regex pattern to filter tags with (e.g. ^sdk/)")
 
 	viper.SetDefault("language", "generic")
-	viper.BindEnv("language", "PULUMI_LANGUAGE")
-	viper.BindPFlag("language", command.Flags().Lookup("language"))
+	util.NoErr(viper.BindEnv("language", "PULUMI_LANGUAGE"))
+	util.NoErr(viper.BindPFlag("language", command.Flags().Lookup("language")))
 
-	viper.BindEnv("version-prefix", "VERSION_PREFIX")
-	viper.BindPFlag("version-prefix", command.Flags().Lookup("version-prefix"))
+	util.NoErr(viper.BindEnv("version-prefix", "VERSION_PREFIX"))
+	util.NoErr(viper.BindPFlag("version-prefix", command.Flags().Lookup("version-prefix")))
 
-	viper.BindEnv("is-prerelease", "IS_PRERELEASE")
-	viper.BindPFlag("is-prerelease", command.Flags().Lookup("is-prerelease"))
+	util.NoErr(viper.BindEnv("is-prerelease", "IS_PRERELEASE"))
+	util.NoErr(viper.BindPFlag("is-prerelease", command.Flags().Lookup("is-prerelease")))
 
-	viper.BindEnv("tag-pattern", "TAG_PATTERN")
-	viper.BindPFlag("tag-pattern", command.Flags().Lookup("tag-pattern"))
+	util.NoErr(viper.BindEnv("tag-pattern", "TAG_PATTERN"))
+	util.NoErr(viper.BindPFlag("tag-pattern", command.Flags().Lookup("tag-pattern")))
 
 	return command
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-github/v32/github"
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
+	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
 	viperlib "github.com/spf13/viper"
 )
@@ -48,13 +49,13 @@ func Command() *cobra.Command {
 
 			// if the string split doesn't return 2 values, it's probably not right
 			if len(repoArray) != 2 {
-				return fmt.Errorf("unable to use repo: format must be <org>/<repo> - value: %s\n", repo)
+				return fmt.Errorf("unable to use repo: format must be <org>/<repo> - value: %s", repo)
 			}
 
 			_, err := semver.Parse(gitversion.StripModuleTagPrefixes(ref))
 
 			if err != nil {
-				return fmt.Errorf("must specify a valid semver ref - value: %s\n", ref)
+				return fmt.Errorf("must specify a valid semver ref - value: %s", ref)
 			}
 
 			// create a github client and token
@@ -80,7 +81,7 @@ func Command() *cobra.Command {
 				})
 
 			if err != nil {
-				return fmt.Errorf("unable to create dispatch event: %w\n", err)
+				return fmt.Errorf("unable to create dispatch event: %w", err)
 			}
 
 			// output stuff
@@ -96,9 +97,9 @@ func Command() *cobra.Command {
 	command.Flags().StringP("repo", "r", "", "the repository to send in the payload")
 	command.Flags().StringP("command", "c", "", "The repository dispatch command to trigger")
 
-	viper.BindPFlag("org", command.Flags().Lookup("org"))
-	viper.BindPFlag("repo", command.Flags().Lookup("repo"))
-	viper.BindPFlag("command", command.Flags().Lookup("command"))
+	util.NoErr(viper.BindPFlag("org", command.Flags().Lookup("org")))
+	util.NoErr(viper.BindPFlag("repo", command.Flags().Lookup("repo")))
+	util.NoErr(viper.BindPFlag("command", command.Flags().Lookup("command")))
 
 	return command
 }

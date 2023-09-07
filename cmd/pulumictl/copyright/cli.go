@@ -57,11 +57,8 @@ func Command() *cobra.Command {
 
 			if fixup {
 				return c.executeFixup()
-			} else {
-				return c.executeCheck()
 			}
-
-			return nil
+			return c.executeCheck()
 		},
 	}
 
@@ -69,7 +66,7 @@ func Command() *cobra.Command {
 	command.Flags().Bool("fixup", false, "edit files to comply")
 	command.Flags().Int("parallelism", 8, "parallelism level to use")
 	command.Flags().Int("lines", 20, "max head lines to scan in each file")
-	command.Flags().StringP("exclude", "x", "", "patterns to exclude from copyright checks (',' seperated)")
+	command.Flags().StringP("exclude", "x", "", "patterns to exclude from copyright checks (',' separated)")
 
 	return command
 }
@@ -87,10 +84,10 @@ type checker struct {
 func newChecker(repo string, exclude []string, headLineLimit int, parallelism int) *checker {
 	srcP := regexp.MustCompile(`[.](py|ts|cs|go)$`)
 	copyP := regexp.MustCompile(`Copyright (20..-20..|20..), Pulumi Corporation`)
-	copy := fmt.Sprintf("Copyright %d, Pulumi Corporation.  All rights reserved.",
+	copyrightNotice := fmt.Sprintf("Copyright %d, Pulumi Corporation.  All rights reserved.",
 		time.Now().Year())
 	return &checker{
-		copyrightNotice:      copy,
+		copyrightNotice:      copyrightNotice,
 		repo:                 repo,
 		exclude:              exclude,
 		sourceFilePattern:    srcP,
@@ -118,10 +115,9 @@ Files missing a Copyright notice:
 			fmt.Printf("%s\n", f)
 		}
 
-		return fmt.Errorf("Found %d source files missing a Copyright notice\n", len(files))
-	} else {
-		return nil
+		return fmt.Errorf("found %d source files missing a Copyright notice", len(files))
 	}
+	return nil
 }
 
 func (c *checker) executeFixup() error {
@@ -170,19 +166,14 @@ func (c *checker) fixupFile(filename string) error {
 		return err
 	}
 
-	if err = w.Flush(); err != nil {
-		return err
-	}
-
-	return nil
+	return w.Flush()
 }
 
 func commentPrefixByFilename(filename string) string {
 	if strings.HasSuffix(filename, ".py") {
 		return "#"
-	} else {
-		return "//"
 	}
+	return "//"
 }
 
 func (c *checker) findAllFiles() ([]string, error) {

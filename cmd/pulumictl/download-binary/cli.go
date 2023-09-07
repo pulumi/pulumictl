@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package download_binary
+package download_binary //nolint:revive // backwards compatibility
 
 import (
 	"archive/tar"
@@ -26,6 +26,7 @@ import (
 	"runtime"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/cmdutil"
+	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +44,7 @@ func Command() *cobra.Command {
 			"\nThis will download a version of binary to a specific location.",
 		Run: cmdutil.RunFunc(func(cmd *cobra.Command, args []string) error {
 			filename := fmt.Sprintf("%s-%s-%s-%s.tar.gz", name, version, runtime.GOOS, runtime.GOARCH)
-			downloadUrl := fmt.Sprintf("%s/%s/releases/download/%s/%s", host, repoSlug, version, filename)
+			downloadURL := fmt.Sprintf("%s/%s/releases/download/%s/%s", host, repoSlug, version, filename)
 
 			cwd, err := os.Getwd()
 			if err != nil {
@@ -51,7 +52,7 @@ func Command() *cobra.Command {
 			}
 			srcFile := fmt.Sprintf("%s/bin/%s", cwd, filename)
 
-			err = downloadBinary(downloadUrl, srcFile)
+			err = downloadBinary(downloadURL, srcFile)
 			if err != nil {
 				return err
 			}
@@ -74,15 +75,15 @@ func Command() *cobra.Command {
 		"host", "https://github.com", "The host of the repo to download from. "+
 			"Defaults to https://github.com")
 
-	cmd.MarkFlagRequired("repo-slug")
-	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("version")
+	util.Ignore(cmd.MarkFlagRequired("repo-slug"))
+	util.Ignore(cmd.MarkFlagRequired("name"))
+	util.Ignore(cmd.MarkFlagRequired("version"))
 
 	return cmd
 }
 
 func downloadBinary(url, destFile string) error {
-	response, err := http.Get(url)
+	response, err := http.Get(url) //nolint:gosec
 	if err != nil {
 		return err
 	}
@@ -129,7 +130,7 @@ func decompressBinary(srcFile, cwd string) error {
 		} else if err != nil {
 			return err
 		}
-		path := filepath.Join(fmt.Sprintf("%s/bin", cwd), header.Name)
+		path := filepath.Join(cwd, "bin", header.Name) //nolint:gosec
 		info := header.FileInfo()
 		if info.IsDir() {
 			if err = os.MkdirAll(path, info.Mode()); err != nil {
@@ -142,7 +143,7 @@ func decompressBinary(srcFile, cwd string) error {
 		if err != nil {
 			return err
 		}
-		_, err = io.Copy(file, tarReader)
+		_, err = io.Copy(file, tarReader) //nolint:gosec
 		if err != nil {
 			file.Close()
 			return err

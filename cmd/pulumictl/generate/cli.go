@@ -162,7 +162,7 @@ func writePackage(dir string, pkg map[string][]byte) error {
 		if err != nil && !os.IsExist(err) {
 			return err
 		}
-		err = ioutil.WriteFile(fullPath, source, 0644)
+		err = ioutil.WriteFile(fullPath, source, 0644) //nolint:gosec
 		if err != nil {
 			return err
 		}

@@ -1,6 +1,6 @@
 module github.com/pulumi/pulumictl
 
-go 1.18
+go 1.21
 
 replace github.com/fsnotify/fsnotify v1.6.0 => ./fsnotify
 

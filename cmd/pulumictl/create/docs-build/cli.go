@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-github/v32/github"
 	gh "github.com/pulumi/pulumictl/pkg/github"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
+	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
 	viperlib "github.com/spf13/viper"
 )
@@ -28,7 +29,7 @@ var (
 
 type Payload struct {
 	Repo             string `json:"repo"`
-	Org              string `json:"org"'`
+	Org              string `json:"org"`
 	Project          string `json:"project"`
 	ProjectShortname string `json:"project-shortname"`
 	Ref              string `json:"ref"`
@@ -72,13 +73,13 @@ func Command() *cobra.Command {
 
 			// if the string split doesn't return 2 values, it's probably not right
 			if len(docsRepoArray) != 2 {
-				return fmt.Errorf("unable to use docs repo: format must be <org>/<repo> - value: %s\n", docsRepo)
+				return fmt.Errorf("unable to use docs repo: format must be <org>/<repo> - value: %s", docsRepo)
 			}
 
 			_, err := semver.Parse(gitversion.StripModuleTagPrefixes(ref))
 
 			if err != nil {
-				return fmt.Errorf("must specify a valid semver ref - value: %s\n", ref)
+				return fmt.Errorf("must specify a valid semver ref - value: %s", ref)
 			}
 
 			// create a github client and token
@@ -113,7 +114,7 @@ func Command() *cobra.Command {
 				})
 
 			if err != nil {
-				return fmt.Errorf("unable to create dispatch event: %w\n", err)
+				return fmt.Errorf("unable to create dispatch event: %w", err)
 			}
 
 			// output stuff
@@ -132,18 +133,18 @@ func Command() *cobra.Command {
 	command.Flags().String("schema-path", "", "the path (relative to repo root) to the schema.yaml/json file")
 	command.Flags().String("publisher", "", "the name of the provider/component publisher")
 
-	viper.BindEnv("org", "GITHUB_ORG")
-	viper.BindEnv("category", "PROVIDER_CATEGORY")
-	viper.BindEnv("display-name", "PROVIDER_DISPLAY_NAME")
-	viper.BindEnv("is-component", "PROVIDER_IS_COMPONENT")
-	viper.BindEnv("schema-path", "PROVIDER_SCHEMA_PATH")
-	viper.BindEnv("publisher", "PROVIDER_PUBLISHER_NAME")
-	viper.BindPFlag("org", command.Flags().Lookup("org"))
-	viper.BindPFlag("category", command.Flags().Lookup("category"))
-	viper.BindPFlag("display-name", command.Flags().Lookup("display-name"))
-	viper.BindPFlag("is-component", command.Flags().Lookup("is-component"))
-	viper.BindPFlag("schema-path", command.Flags().Lookup("schema-path"))
-	viper.BindPFlag("publisher", command.Flags().Lookup("publisher"))
+	util.NoErr(viper.BindEnv("org", "GITHUB_ORG"))
+	util.NoErr(viper.BindEnv("category", "PROVIDER_CATEGORY"))
+	util.NoErr(viper.BindEnv("display-name", "PROVIDER_DISPLAY_NAME"))
+	util.NoErr(viper.BindEnv("is-component", "PROVIDER_IS_COMPONENT"))
+	util.NoErr(viper.BindEnv("schema-path", "PROVIDER_SCHEMA_PATH"))
+	util.NoErr(viper.BindEnv("publisher", "PROVIDER_PUBLISHER_NAME"))
+	util.NoErr(viper.BindPFlag("org", command.Flags().Lookup("org")))
+	util.NoErr(viper.BindPFlag("category", command.Flags().Lookup("category")))
+	util.NoErr(viper.BindPFlag("display-name", command.Flags().Lookup("display-name")))
+	util.NoErr(viper.BindPFlag("is-component", command.Flags().Lookup("is-component")))
+	util.NoErr(viper.BindPFlag("schema-path", command.Flags().Lookup("schema-path")))
+	util.NoErr(viper.BindPFlag("publisher", command.Flags().Lookup("publisher")))
 
 	return command
 }

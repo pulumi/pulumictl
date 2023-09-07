@@ -1,10 +1,11 @@
-package convertVersion
+package convertVersion //nolint:revive // backwards compatibility
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/pulumi/pulumictl/pkg/gitversion"
+	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
 	viperlib "github.com/spf13/viper"
 )
@@ -55,14 +56,18 @@ func Command() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVarP(&language, "language", "l", "", "the platform for which the version should be output.")
-	command.Flags().StringVarP(&version, "version", "v", "", "the generic version to convert (e.g. 3.0.0). Must be valid semver.")
+	command.Flags().StringVarP(&language,
+		"language", "l", "",
+		"the platform for which the version should be output.")
+	command.Flags().StringVarP(&version,
+		"version", "v", "",
+		"the generic version to convert (e.g. 3.0.0). Must be valid semver.")
 
-	viper.BindEnv("language", "PULUMI_LANGUAGE")
-	viper.BindPFlag("language", command.Flags().Lookup("language"))
+	util.NoErr(viper.BindEnv("language", "PULUMI_LANGUAGE"))
+	util.NoErr(viper.BindPFlag("language", command.Flags().Lookup("language")))
 
-	viper.BindEnv("version", "VERSION")
-	viper.BindPFlag("version", command.Flags().Lookup("version"))
+	util.NoErr(viper.BindEnv("version", "VERSION"))
+	util.NoErr(viper.BindPFlag("version", command.Flags().Lookup("version")))
 
 	return command
 }
