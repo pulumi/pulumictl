@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package download_binary
+package download_binary //nolint:revive // backwards compatibility
 
 import (
 	"archive/tar"
@@ -83,7 +83,7 @@ func Command() *cobra.Command {
 }
 
 func downloadBinary(url, destFile string) error {
-	response, err := http.Get(url)
+	response, err := http.Get(url) //nolint:gosec
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func decompressBinary(srcFile, cwd string) error {
 		} else if err != nil {
 			return err
 		}
-		path := filepath.Join(fmt.Sprintf("%s/bin", cwd), header.Name)
+		path := filepath.Join(cwd, "bin", header.Name) //nolint:gosec
 		info := header.FileInfo()
 		if info.IsDir() {
 			if err = os.MkdirAll(path, info.Mode()); err != nil {
@@ -143,7 +143,7 @@ func decompressBinary(srcFile, cwd string) error {
 		if err != nil {
 			return err
 		}
-		_, err = io.Copy(file, tarReader)
+		_, err = io.Copy(file, tarReader) //nolint:gosec
 		if err != nil {
 			file.Close()
 			return err

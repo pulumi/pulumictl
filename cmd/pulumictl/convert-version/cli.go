@@ -1,4 +1,4 @@
-package convertVersion
+package convertVersion //nolint:revive // backwards compatibility
 
 import (
 	"fmt"

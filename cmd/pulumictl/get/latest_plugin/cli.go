@@ -1,4 +1,4 @@
-package latest_plugin
+package latest_plugin //nolint:revive // backwards compatibility
 
 import (
 	"fmt"
