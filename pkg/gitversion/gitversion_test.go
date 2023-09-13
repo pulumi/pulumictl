@@ -21,11 +21,8 @@ func TestStripModuleTagPrefixes(t *testing.T) {
 
 func TestMostRecentTag(t *testing.T) {
 	t.Run("Repo with commit after tag", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
-		repo, err = testRepoSingleCommitPastRelease(repo)
-		require.NoError(t, err)
-		require.NotNil(t, repo)
+		repo := testRepoCreate(t)
+		testRepoSingleCommitPastRelease(t, repo)
 
 		headRef, err := repo.Head()
 		require.NoError(t, err)
@@ -39,8 +36,7 @@ func TestMostRecentTag(t *testing.T) {
 	})
 
 	t.Run("Repo with no tags", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 		head, err := testRepoSingleCommit(repo)
 		require.NoError(t, err)
 		require.NotEmpty(t, head)
@@ -52,8 +48,7 @@ func TestMostRecentTag(t *testing.T) {
 	})
 
 	t.Run("Repo with mod-prefixed tags", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 
 		tagSequence := []string{
 			"v1.0.0-alpha.1",
@@ -64,7 +59,7 @@ func TestMostRecentTag(t *testing.T) {
 			"v2.0.0-beta.1",
 		}
 
-		repo, err = testRepoWithTags(repo, tagSequence)
+		repo, err := testRepoWithTags(repo, tagSequence)
 		require.NoError(t, err)
 
 		headRef, err := repo.Head()
@@ -95,11 +90,8 @@ func TestMostRecentTag(t *testing.T) {
 }
 
 func TestIsExactTag(t *testing.T) {
-	repo, err := testRepoCreate()
-	require.NoError(t, err)
-	repo, err = testRepoSingleCommitPastRelease(repo)
-	require.NoError(t, err)
-	require.NotNil(t, repo)
+	repo := testRepoCreate(t)
+	testRepoSingleCommitPastRelease(t, repo)
 
 	headRef, err := repo.Head()
 	require.NoError(t, err)
@@ -212,9 +204,9 @@ func TestIsWorktreeDirty(t *testing.T) {
 func TestGetVersion(t *testing.T) {
 
 	t.Run("Repo with no tags", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
-		_, err = testRepoSingleCommit(repo)
+		repo := testRepoCreate(t)
+
+		_, err := testRepoSingleCommit(repo)
 		require.NoError(t, err)
 
 		opts := LanguageVersionsOptions{
@@ -231,14 +223,13 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with exact tag", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 
 		tagSequence := []string{
 			"v1.0.0",
 		}
 
-		repo, err = testRepoWithTags(repo, tagSequence)
+		repo, err := testRepoWithTags(repo, tagSequence)
 		require.NoError(t, err)
 
 		opts := LanguageVersionsOptions{
@@ -255,8 +246,7 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with with commit after tag", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 		workTree, err := repo.Worktree()
 		require.NoError(t, err)
 
@@ -286,8 +276,7 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with with commit after tag and dirty", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 		workTree, err := repo.Worktree()
 		require.NoError(t, err)
 
@@ -322,8 +311,7 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with no tags and dirty", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 		workTree, err := repo.Worktree()
 		require.NoError(t, err)
 		_, err = testRepoSingleCommit(repo)
@@ -348,8 +336,7 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with alpha tag and dirty", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 		workTree, err := repo.Worktree()
 		require.NoError(t, err)
 
@@ -379,8 +366,7 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with annotated tag", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 
 		workTree, err := repo.Worktree()
 		require.NoError(t, err)
@@ -416,8 +402,7 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with exact tag and dirty", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 		workTree, err := repo.Worktree()
 		require.NoError(t, err)
 
@@ -449,14 +434,13 @@ func TestGetVersion(t *testing.T) {
 	t.Run("Repo with un-dotted alpha tag", func(t *testing.T) {
 		// Regression test for https://github.com/pulumi/pulumictl/issues/50
 
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 
 		tagSequence := []string{
 			"v1.0.0-alpha",
 		}
 
-		repo, err = testRepoWithTags(repo, tagSequence)
+		repo, err := testRepoWithTags(repo, tagSequence)
 		require.NoError(t, err)
 
 		opts := LanguageVersionsOptions{
@@ -475,14 +459,13 @@ func TestGetVersion(t *testing.T) {
 	t.Run("Repo with un-dotted alpha tag marked for pre-release", func(t *testing.T) {
 		// Regression test for https://gi thub.com/pulumi/pulumictl/issues/50
 
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 
 		tagSequence := []string{
 			"v1.0.0-alpha",
 		}
 
-		repo, err = testRepoWithTags(repo, tagSequence)
+		repo, err := testRepoWithTags(repo, tagSequence)
 		require.NoError(t, err)
 
 		opts := LanguageVersionsOptions{
@@ -500,14 +483,13 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with dotted alpha tag marked for pre-release", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 
 		tagSequence := []string{
 			"v1.0.0-alpha.1",
 		}
 
-		repo, err = testRepoWithTags(repo, tagSequence)
+		repo, err := testRepoWithTags(repo, tagSequence)
 		require.NoError(t, err)
 
 		opts := LanguageVersionsOptions{
@@ -525,14 +507,13 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with build info tag", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 
 		tagSequence := []string{
 			"v1.0.0+1",
 		}
 
-		repo, err = testRepoWithTags(repo, tagSequence)
+		repo, err := testRepoWithTags(repo, tagSequence)
 		require.NoError(t, err)
 
 		opts := LanguageVersionsOptions{
@@ -549,14 +530,13 @@ func TestGetVersion(t *testing.T) {
 	})
 
 	t.Run("Repo with complicated build info tag", func(t *testing.T) {
-		repo, err := testRepoCreate()
-		require.NoError(t, err)
+		repo := testRepoCreate(t)
 
 		tagSequence := []string{
 			"v1.0.0+1abc.345.whoop",
 		}
 
-		repo, err = testRepoWithTags(repo, tagSequence)
+		repo, err := testRepoWithTags(repo, tagSequence)
 		require.NoError(t, err)
 
 		opts := LanguageVersionsOptions{

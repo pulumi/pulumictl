@@ -41,61 +41,45 @@ func testRepoFSCreate(baseDir string) (*git.Repository, error) {
 	}), osfs.New(baseDir))
 }
 
-func testRepoSingleCommitPastRelease(repo *git.Repository) (*git.Repository, error) {
+func testRepoSingleCommitPastRelease(t *testing.T, repo *git.Repository) {
 	workTree, err := repo.Worktree()
-	if err != nil {
-		return nil, fmt.Errorf("worktree: %w", err)
-	}
+	require.NoError(t, err)
 
 	// alpha tag
 	workDir := workTree.Filesystem
-	if err := writeFile(workDir, "hello-world.alpha", "Hello World"); err != nil {
-		return nil, fmt.Errorf("writeFile: %w", err)
-	}
-	if _, err := workTree.Add("hello-world.alpha"); err != nil {
-		return nil, fmt.Errorf("worktree-add: %w", err)
-	}
+	err = writeFile(workDir, "hello-world.alpha", "Hello World")
+	require.NoError(t, err)
+
+	_, err = workTree.Add("hello-world.alpha")
+	require.NoError(t, err)
 	alphaCommitHash, err := workTree.Commit("Initial Commit!", &git.CommitOptions{Author: testSignature})
-	if err != nil {
-		return nil, fmt.Errorf("commit: %w", err)
-	}
-	if _, err := repo.CreateTag("v1.0.0-alpha.1", alphaCommitHash, nil); err != nil {
-		return nil, fmt.Errorf("tag: %w", err)
-	}
+	require.NoError(t, err)
+
+	_, err = repo.CreateTag("v1.0.0-alpha.1", alphaCommitHash, nil)
+	require.NoError(t, err)
 
 	// v1.0.0 tag
-	if err := writeFile(workDir, "hello-world", "Hello World"); err != nil {
-		return nil, fmt.Errorf("writeFile: %w", err)
-	}
-	if _, err := workTree.Add("hello-world"); err != nil {
-		return nil, fmt.Errorf("worktree-add: %w", err)
-	}
+	err = writeFile(workDir, "hello-world", "Hello World")
+	require.NoError(t, err)
+
+	_, err = workTree.Add("hello-world")
+	require.NoError(t, err)
 	tagCommitHash, err := workTree.Commit("Initial Commit!", &git.CommitOptions{Author: testSignature})
-	if err != nil {
-		return nil, fmt.Errorf("commit: %w", err)
-	}
-	if _, err := repo.CreateTag("v1.0.0", tagCommitHash, nil); err != nil {
-		return nil, fmt.Errorf("tag: %w", err)
-	}
+	require.NoError(t, err)
+	_, err = repo.CreateTag("v1.0.0", tagCommitHash, nil)
+	require.NoError(t, err)
 
 	// commit after tag
-	if err := writeFile(workDir, "hello-world2", "Hello World 2"); err != nil {
-		return nil, fmt.Errorf("writeFile: %w", err)
-	}
-	if _, err := workTree.Add("hello-world2"); err != nil {
-		return nil, fmt.Errorf("worktree-add: %w", err)
-	}
+	err = writeFile(workDir, "hello-world2", "Hello World 2")
+	require.NoError(t, err)
+	_, err = workTree.Add("hello-world2")
+	require.NoError(t, err)
 	postReleaseCommit, err := workTree.Commit("Subsequent Commit!", &git.CommitOptions{Author: testSignature})
-	if err != nil {
-		return nil, fmt.Errorf("commit: %w", err)
-	}
+	require.NoError(t, err)
 
 	// make the commit after tag a new beta tag
-	if _, err := repo.CreateTag("v2.0.0-beta.1", postReleaseCommit, nil); err != nil {
-		return nil, fmt.Errorf("tag: %w", err)
-	}
-
-	return repo, nil
+	_, err = repo.CreateTag("v2.0.0-beta.1", postReleaseCommit, nil)
+	require.NoError(t, err)
 }
 
 func addFile(t *testing.T, workTree *git.Worktree, name, content string) {
