@@ -15,3 +15,8 @@ clean:
 
 lint:
 	cd cmd && golangci-lint run -c ../.golangci.yml --timeout 5m
+
+test:
+	go test ./...
+
+.PHONY: build install clean lint test
