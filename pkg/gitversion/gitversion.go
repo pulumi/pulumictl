@@ -1,21 +1,23 @@
 package gitversion
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os/exec"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
-	viperlib "github.com/spf13/viper"
-
 	"github.com/blang/semver"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
 	"github.com/go-git/go-git/v5/storage/filesystem"
+	viperlib "github.com/spf13/viper"
 )
 
 // LanguageVersions contains a generic semantic version and Python-specific version number.
@@ -263,7 +265,11 @@ func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash,
 	}
 
 	// First check whether we had a commit with an exact tag to start with
-	isExact, exactMatch, err := isExactTag(repo, commit.Hash, isPrerelease, tagFilter)
+	tags, err := repo.Tags()
+	if err != nil {
+		return "", false, fmt.Errorf("error resolving repo tags: %w", err)
+	}
+	isExact, exactMatch, err := isExactTag(repo, tags, commit.Hash, isPrerelease, tagFilter)
 	if err != nil {
 		return "", false, fmt.Errorf("isExactTag: %w", err)
 	}
@@ -294,14 +300,10 @@ func StripModuleTagPrefixes(tag string) string {
 
 // isExactTag returns true if the given hash has a tag associated with it. If
 // true is returned, the second return value is a reference representing the tag.
-func isExactTag(repo *git.Repository, hash plumbing.Hash,
+func isExactTag(repo *git.Repository, tags storer.ReferenceIter, hash plumbing.Hash,
 	isPrerease bool, tagFilter func(string) bool) (bool, *plumbing.Reference, error) {
-	tags, err := repo.Tags()
-	if err != nil {
-		return false, nil, fmt.Errorf("error listing tags: %w", err)
-	}
 
-	var exactTag *plumbing.Reference = nil
+	var exactTag *plumbing.Reference
 	if err := tags.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Type() != plumbing.HashReference {
 			// Skip symbolic refs, for simplicity. We're not going to try and recursively resolve these.
@@ -309,6 +311,9 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash,
 		}
 
 		refName := ref.Name().String()
+		if !strings.HasPrefix(refName, "refs/tags/") {
+			return nil
+		}
 
 		// if we are marking the release as a pre-release, then we want to take into account
 		// the beta and rc versions
@@ -344,6 +349,7 @@ func isExactTag(repo *git.Repository, hash plumbing.Hash,
 
 		default:
 			return err
+
 		}
 
 		return nil
@@ -365,21 +371,63 @@ func mostRecentTag(repo *git.Repository, ref plumbing.Hash, isPrerelease bool,
 	}
 
 	var mostRecentTag *plumbing.Reference
+	walk := func(tags func() (storer.ReferenceIter, error)) func(*object.Commit) error {
+		return func(commit *object.Commit) error {
+			tags, err := tags()
+			if err != nil {
+				return fmt.Errorf("resolving repo tags: %w", err)
+			}
+			isExact, exact, err := isExactTag(repo, tags, commit.Hash, isPrerelease, tagFilter)
+			if err != nil {
+				return err
+			}
+
+			if !isExact {
+				return nil
+			}
+
+			mostRecentTag = exact
+			return storer.ErrStop
+
+		}
+	}
+
+	// Walk the commits that are checked out, in order.
 	walker := object.NewCommitPreorderIter(commit, nil, nil)
-	err = walker.ForEach(func(commit *object.Commit) error {
-		isExact, exact, err := isExactTag(repo, commit.Hash, isPrerelease, tagFilter)
-		if err != nil {
-			return err
-		}
+	err = walker.ForEach(walk(repo.Tags))
 
-		if !isExact {
-			return nil
-		}
+	// If we are missing an object, then this is not a full clone, and we should check
+	// for remote tags.
+	isBareCheckout := errors.Is(err, plumbing.ErrObjectNotFound)
+	if isBareCheckout {
+		err = nil
+	}
+	if err != nil {
+		return false, nil, fmt.Errorf("could not find local object: %w", err)
+	}
+	// We have found a local tag that is a parent, so return it.
+	if mostRecentTag != nil || !isBareCheckout {
+		return mostRecentTag != nil, mostRecentTag, nil
+	}
 
-		mostRecentTag = exact
-		return storer.ErrStop
-	})
+	// See if we can find a remote tag that matches our commit.
+	//
+	// We start by fetching the set of tags on the remote:
+	remote, err := repo.Remote("origin")
+	if err != nil {
+		return false, nil, fmt.Errorf("could not find remote: %w", err)
+	}
+	refs, err := remote.List(&git.ListOptions{})
+	if err != nil {
+		return false, nil, fmt.Errorf("could not list remote refs: %w", err)
+	}
 
+	// We then traverse the transitive set of parents, stopping when a parent matches
+	// a tag.
+	err = walkRemoteParents(repo, commit, walk(func() (storer.ReferenceIter, error) {
+		tags := storer.NewReferenceSliceIter(refs)
+		return tags, nil
+	}))
 	return mostRecentTag != nil, mostRecentTag, err
 }
 
@@ -441,4 +489,53 @@ func workTreeIsDirty(repo *git.Repository) (bool, error) {
 		fmt.Println(string(output))
 	}
 	return len(output) > 0, nil
+}
+
+func walkRemoteParents(repo *git.Repository, commit *object.Commit, f func(*object.Commit) error) error {
+	queue := []*object.Commit{commit}
+	fetchDepth := 4
+	seen := map[plumbing.Hash]struct{}{}
+	for i := 0; len(queue) > i; i++ {
+		commit := queue[i]
+		if _, ok := seen[commit.Hash]; ok {
+			continue
+		} else {
+			seen[commit.Hash] = struct{}{}
+		}
+		err := f(commit)
+		if errors.Is(err, storer.ErrStop) {
+			return nil
+		} else if err != nil {
+			return err
+		}
+
+		for _, p := range commit.ParentHashes {
+			pCommit, err := repo.CommitObject(p)
+			if errors.Is(err, plumbing.ErrObjectNotFound) {
+				// The parent is missing, so lets fetch it.
+				fetchDepth *= 2
+				err = repo.Fetch(&git.FetchOptions{
+					RemoteName: "origin",
+					Depth:      fetchDepth,
+					RefSpecs: []config.RefSpec{config.RefSpec(
+						fmt.Sprintf("%[1]s:%[1]s", p.String()),
+					)},
+					Tags:     git.TagFollowing,
+					Progress: io.Discard,
+				})
+				if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+					return fmt.Errorf("failed to fetch parents: %w", err)
+				}
+				pCommit, err = repo.CommitObject(p)
+			}
+
+			if err != nil {
+				return fmt.Errorf("could not find parent commit %s: %w", p, err)
+			}
+			queue = append(queue, pCommit)
+		}
+
+	}
+	// If the queue was exhausted, we just return nil
+	return nil
 }

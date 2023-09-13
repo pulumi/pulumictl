@@ -9,6 +9,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -105,10 +106,12 @@ func TestIsExactTag(t *testing.T) {
 	require.NotEmpty(t, headRef)
 
 	t.Run("Not an exact tag", func(t *testing.T) {
-		isExact, exact, err := isExactTag(repo, headRef.Hash(), false, nil)
+		tags, err := repo.Tags()
 		require.NoError(t, err)
-		require.Nil(t, exact)
-		require.False(t, isExact)
+		isExact, exact, err := isExactTag(repo, tags, headRef.Hash(), false, nil)
+		require.NoError(t, err)
+		assert.Nil(t, exact)
+		assert.False(t, isExact)
 	})
 
 	t.Run("With exact tag - prerelease", func(t *testing.T) {
@@ -116,10 +119,13 @@ func TestIsExactTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, exactRef)
 
-		isExact, exact, err := isExactTag(repo, exactRef.Hash(), false, nil)
+		tags, err := repo.Tags()
 		require.NoError(t, err)
-		require.NotNil(t, exact)
-		require.True(t, isExact)
+
+		isExact, exact, err := isExactTag(repo, tags, exactRef.Hash(), false, nil)
+		require.NoError(t, err)
+		assert.NotNil(t, exact)
+		assert.True(t, isExact)
 	})
 
 	t.Run("With exact tag", func(t *testing.T) {
@@ -127,10 +133,13 @@ func TestIsExactTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, exactRef)
 
-		isExact, exact, err := isExactTag(repo, exactRef.Hash(), false, nil)
+		tags, err := repo.Tags()
 		require.NoError(t, err)
-		require.NotNil(t, exact)
-		require.True(t, isExact)
+
+		isExact, exact, err := isExactTag(repo, tags, exactRef.Hash(), false, nil)
+		require.NoError(t, err)
+		assert.NotNil(t, exact)
+		assert.True(t, isExact)
 	})
 
 	t.Run("Don't skip the beta tag as it's a pre-release", func(t *testing.T) {
@@ -138,10 +147,13 @@ func TestIsExactTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, exactRef)
 
-		isExact, exact, err := isExactTag(repo, exactRef.Hash(), true, nil)
+		tags, err := repo.Tags()
 		require.NoError(t, err)
-		require.NotNil(t, exact)
-		require.True(t, isExact)
+
+		isExact, exact, err := isExactTag(repo, tags, exactRef.Hash(), true, nil)
+		require.NoError(t, err)
+		assert.NotNil(t, exact)
+		assert.True(t, isExact)
 	})
 
 	t.Run("Skip the beta as it's a normal release", func(t *testing.T) {
@@ -149,10 +161,13 @@ func TestIsExactTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, exactRef)
 
-		isExact, exact, err := isExactTag(repo, exactRef.Hash(), false, nil)
+		tags, err := repo.Tags()
 		require.NoError(t, err)
-		require.Nil(t, exact)
-		require.False(t, isExact)
+
+		isExact, exact, err := isExactTag(repo, tags, exactRef.Hash(), false, nil)
+		require.NoError(t, err)
+		assert.Nil(t, exact)
+		assert.False(t, isExact)
 	})
 }
 
