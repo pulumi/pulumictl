@@ -20,20 +20,23 @@ func TestStripModuleTagPrefixes(t *testing.T) {
 }
 
 func TestMostRecentTag(t *testing.T) {
-	t.Run("Repo with commit after tag", func(t *testing.T) {
-		repo := testRepoCreate(t)
-		testRepoSingleCommitPastRelease(t, repo)
 
-		headRef, err := repo.Head()
-		require.NoError(t, err)
-		require.NotEmpty(t, headRef)
+	t.Run("Repo with commit after tag", testRepo(
+		testRepoSingleCommitPastRelease,
+		func(t *testing.T, repo *git.Repository) {
+			headRef, err := repo.Head()
+			require.NoError(t, err)
+			require.NotEmpty(t, headRef)
 
-		hasMostRecent, mostRecent, err := mostRecentTag(repo, headRef.Hash(), false, false, nil)
-		require.NoError(t, err)
-		require.True(t, hasMostRecent)
-		require.NotNil(t, mostRecent)
-		require.Equal(t, "refs/tags/v1.0.0", mostRecent.Name().String())
-	})
+			remotes, err := repo.Remotes()
+			require.NoError(t, err)
+			hasMostRecent, mostRecent, err := mostRecentTag(repo, headRef.Hash(),
+				false, len(remotes) > 0, nil)
+			require.NoError(t, err)
+			require.True(t, hasMostRecent)
+			require.NotNil(t, mostRecent)
+			require.Equal(t, "refs/tags/v1.0.0", mostRecent.Name().String())
+		}))
 
 	t.Run("Repo with no tags", func(t *testing.T) {
 		repo := testRepoCreate(t)
@@ -169,8 +172,7 @@ func TestIsWorktreeDirty(t *testing.T) {
 	defer func() {
 		_ = os.RemoveAll(dir)
 	}()
-	repo, err := testRepoFSCreate(dir)
-	require.NoError(t, err)
+	repo := testRepoFSCreate(t, dir)
 	head, err := testRepoSingleCommit(repo)
 	require.NoError(t, err)
 	require.NotEmpty(t, head)

@@ -493,7 +493,7 @@ func workTreeIsDirty(repo *git.Repository) (bool, error) {
 
 func walkRemoteParents(repo *git.Repository, commit *object.Commit, f func(*object.Commit) error) error {
 	queue := []*object.Commit{commit}
-	fetchDepth := 4
+	fetchDepth := 8
 	seen := map[plumbing.Hash]struct{}{}
 	for i := 0; len(queue) > i; i++ {
 		commit := queue[i]
@@ -514,7 +514,7 @@ func walkRemoteParents(repo *git.Repository, commit *object.Commit, f func(*obje
 			if errors.Is(err, plumbing.ErrObjectNotFound) {
 				// The parent is missing, so lets fetch it.
 				fetchDepth *= 2
-				err = repo.Fetch(&git.FetchOptions{
+				opts := &git.FetchOptions{
 					RemoteName: "origin",
 					Depth:      fetchDepth,
 					RefSpecs: []config.RefSpec{config.RefSpec(
@@ -522,8 +522,15 @@ func walkRemoteParents(repo *git.Repository, commit *object.Commit, f func(*obje
 					)},
 					Tags:     git.TagFollowing,
 					Progress: io.Discard,
-				})
-				if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+				}
+				err = repo.Fetch(opts)
+				if errors.Is(err, git.ErrExactSHA1NotSupported) {
+					opts.RefSpecs = []config.RefSpec{config.RefSpec(
+						fmt.Sprintf("HEAD:%[1]s", p.String()),
+					)}
+					err = repo.Fetch(opts)
+				}
+				if err != nil {
 					return fmt.Errorf("failed to fetch parents: %w", err)
 				}
 				pCommit, err = repo.CommitObject(p)

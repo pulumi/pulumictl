@@ -11,6 +11,7 @@ import (
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"github.com/go-git/go-git/v5/storage/memory"
@@ -22,23 +23,61 @@ var testSignature = &object.Signature{
 	Email: "test@localhost",
 }
 
-func testRepoCreate() (*git.Repository, error) {
+func testRepoCreate(t *testing.T) *git.Repository {
 	workDir := memfs.New()
 
 	repo, err := git.Init(memory.NewStorage(), workDir)
+	require.NoError(t, err)
 
-	if err != nil {
-		return nil, fmt.Errorf("git init: %w", err)
-	}
-
-	return repo, nil
+	return repo
 }
 
-func testRepoFSCreate(baseDir string) (*git.Repository, error) {
+func testRepo(
+	setup func(*testing.T, *git.Repository),
+	test func(*testing.T, *git.Repository),
+) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Run("local", func(t *testing.T) {
+			repo := testRepoCreate(t)
+			setup(t, repo)
+			test(t, repo)
+		})
+
+		t.Run("remote", func(t *testing.T) {
+			remoteDir := t.TempDir()
+			remote := testRepoFSCreate(t, remoteDir)
+			url := "file://" + remoteDir + "/.git/"
+			t.Logf("\nTempDir is %q\n=>\nURL is %q", remoteDir, url)
+
+			setup(t, remote)
+
+			headRef, err := remote.Head()
+			require.NoError(t, err)
+
+			t.Logf("Remote HEAD: %s", headRef.Hash())
+
+			localDir := memfs.New()
+			local, err := git.Clone(memory.NewStorage(), localDir, &git.CloneOptions{
+				URL:        url,
+				RemoteName: "origin",
+				Depth:      1,
+				Tags:       git.TagFollowing,
+			})
+			require.NoError(t, err)
+
+			test(t, local)
+		})
+	}
+}
+
+func testRepoFSCreate(t *testing.T, baseDir string) *git.Repository {
 	gitDir := osfs.New(filepath.Join(baseDir, ".git"))
-	return git.Init(filesystem.NewStorageWithOptions(gitDir, nil, filesystem.Options{
-		ExclusiveAccess: true,
-	}), osfs.New(baseDir))
+	repo, err := git.Init(filesystem.NewStorageWithOptions(gitDir,
+		cache.NewObjectLRUDefault(), filesystem.Options{
+			ExclusiveAccess: true,
+		}), osfs.New(baseDir))
+	require.NoError(t, err)
+	return repo
 }
 
 func testRepoSingleCommitPastRelease(t *testing.T, repo *git.Repository) {
