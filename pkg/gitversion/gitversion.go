@@ -34,6 +34,7 @@ type LanguageVersionsOptions struct {
 	OmitCommitHash bool
 	ReleasePrefix  string
 	IsPreRelease   bool
+	Remote         bool
 	TagFilter      func(string) bool
 }
 
@@ -47,8 +48,10 @@ func GetLanguageVersionsWithOptions(opts LanguageVersionsOptions) (*LanguageVers
 	releasePrefix := opts.ReleasePrefix
 	isPrerelease := opts.IsPreRelease
 	tagFilter := opts.TagFilter
+	useRemote := opts.Remote
 
-	versionComponents, err := versionAtCommitForRepo(repo, commitish, releasePrefix, isPrerelease, tagFilter)
+	versionComponents, err := versionAtCommitForRepo(repo, commitish, releasePrefix,
+		isPrerelease, useRemote, tagFilter)
 	if err != nil {
 		return nil, fmt.Errorf("getting language versions: %w", err)
 	}
@@ -186,7 +189,7 @@ type versionComponents struct {
 // versionAtCommitForRepo determines the version components on which the language-specific variants
 // are calculated from.
 func versionAtCommitForRepo(repo *git.Repository, commitish plumbing.Revision, releasePrefix string,
-	isPrerelease bool, tagFilter func(string) bool) (*versionComponents, error) {
+	isPrerelease, useRemote bool, tagFilter func(string) bool) (*versionComponents, error) {
 
 	revision, err := repo.ResolveRevision(commitish)
 	if err != nil {
@@ -198,7 +201,7 @@ func versionAtCommitForRepo(repo *git.Repository, commitish plumbing.Revision, r
 		return nil, fmt.Errorf("error getting commit for revision: %w", err)
 	}
 
-	baseVersion, isExact, err := determineBaseVersion(repo, revision, isPrerelease, tagFilter)
+	baseVersion, isExact, err := determineBaseVersion(repo, revision, isPrerelease, useRemote, tagFilter)
 	if err != nil {
 		return nil, fmt.Errorf("error determining base versionComponents: %w", err)
 	}
@@ -257,7 +260,8 @@ func versionAtCommitForRepo(repo *git.Repository, commitish plumbing.Revision, r
 // If non-empty, `tagPrefix` works by filtering tags as if the repo
 // only had tags that start with this prefix.
 func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash,
-	isPrerelease bool, tagFilter func(string) bool) (string, bool, error) {
+	isPrerelease, useRemote bool, tagFilter func(string) bool,
+) (string, bool, error) {
 	// Resolve the `commitish` we were given into a reference
 	commit, err := repo.CommitObject(*revision)
 	if err != nil {
@@ -278,7 +282,7 @@ func determineBaseVersion(repo *git.Repository, revision *plumbing.Hash,
 	}
 
 	// If not, find the most recent tag
-	hasRecent, recentMatch, err := mostRecentTag(repo, commit.Hash, isPrerelease, tagFilter)
+	hasRecent, recentMatch, err := mostRecentTag(repo, commit.Hash, isPrerelease, useRemote, tagFilter)
 	if err != nil {
 		return "", false, fmt.Errorf("mostRecentTag: %w", err)
 	}
@@ -363,7 +367,7 @@ func isExactTag(repo *git.Repository, tags storer.ReferenceIter, hash plumbing.H
 // mostRecentTag returns a reference to the most recent tag in which the given commit reference is included.
 // The first return value is true if there is a tag matching these criteria, and false if not. If the
 // first return is true, the second value contains a reference to the appropriate tag.
-func mostRecentTag(repo *git.Repository, ref plumbing.Hash, isPrerelease bool,
+func mostRecentTag(repo *git.Repository, ref plumbing.Hash, isPrerelease, useRemote bool,
 	tagFilter func(string) bool) (bool, *plumbing.Reference, error) {
 	commit, err := repo.CommitObject(ref)
 	if err != nil {
@@ -398,15 +402,11 @@ func mostRecentTag(repo *git.Repository, ref plumbing.Hash, isPrerelease bool,
 
 	// If we are missing an object, then this is not a full clone, and we should check
 	// for remote tags.
-	isBareCheckout := errors.Is(err, plumbing.ErrObjectNotFound)
-	if isBareCheckout {
+	if errors.Is(err, plumbing.ErrObjectNotFound) && useRemote {
 		err = nil
-	}
-	if err != nil {
+	} else if err != nil {
 		return false, nil, fmt.Errorf("could not find local object: %w", err)
-	}
-	// We have found a local tag that is a parent, so return it.
-	if mostRecentTag != nil || !isBareCheckout {
+	} else {
 		return mostRecentTag != nil, mostRecentTag, nil
 	}
 

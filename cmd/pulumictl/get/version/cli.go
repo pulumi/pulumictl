@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/cmdutil"
 	"github.com/pulumi/pulumictl/pkg/gitversion"
 	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
@@ -21,15 +22,28 @@ func Command() *cobra.Command {
 		versionPrefix  string
 		omitCommitHash bool
 		isPreRelease   bool
-		tagPattern     string
+		remote         bool
+
+		tagPattern string
+		tagFilter  func(string) bool
 	)
 	command := &cobra.Command{
 		Use:   "version",
 		Short: "Calculate versions",
 		Long:  "Calculate a package version from repository tags and state",
 		Args:  cobra.MaximumNArgs(1),
+		PreRunE: func(*cobra.Command, []string) error {
+			if tagPattern != "" {
+				re, err := regexp.Compile(tagPattern)
+				if err != nil {
+					return fmt.Errorf("tag-pattern not a valid regexp: %w", err)
+				}
+				tagFilter = re.MatchString
+			}
 
-		RunE: func(cmd *cobra.Command, args []string) error {
+			return nil
+		},
+		Run: cmdutil.RunFunc(func(cmd *cobra.Command, args []string) error {
 			if err := cmd.ParseFlags(args); err != nil {
 				return err
 			}
@@ -53,15 +67,6 @@ func Command() *cobra.Command {
 			isPreRelease = viper.GetBool("is-prerelease")
 			tagPattern = viper.GetString("tag-pattern")
 
-			var tagFilter func(string) bool
-			if tagPattern != "" {
-				re, err := regexp.Compile(tagPattern)
-				if err != nil {
-					return fmt.Errorf("tag-pattern not a valid regexp: %w", err)
-				}
-				tagFilter = re.MatchString
-			}
-
 			repo, err := git.PlainOpenWithOptions(workingDir, &git.PlainOpenOptions{
 				DetectDotGit:          true,
 				EnableDotGitCommonDir: true})
@@ -76,6 +81,7 @@ func Command() *cobra.Command {
 				ReleasePrefix:  versionPrefix,
 				IsPreRelease:   isPreRelease,
 				TagFilter:      tagFilter,
+				Remote:         remote,
 			})
 
 			if err != nil {
@@ -97,7 +103,7 @@ func Command() *cobra.Command {
 			}
 
 			return nil
-		},
+		}),
 	}
 
 	command.Flags().StringP("repo", "r", "", "path to repository, defaults to current working directory")
@@ -108,6 +114,8 @@ func Command() *cobra.Command {
 		"omit-commit-hash", "o", false, "whether to include or omit the commit hash in the version")
 	command.Flags().BoolVar(&isPreRelease, "is-prerelease", false, "whether this is a pre-release version")
 	command.Flags().StringVar(&tagPattern, "tag-pattern", "", "regex pattern to filter tags with (e.g. ^sdk/)")
+	command.Flags().BoolVar(&remote, "remote", false,
+		"if `pulumictl` will look at the remote of a bare repository")
 
 	viper.SetDefault("language", "generic")
 	util.NoErr(viper.BindEnv("language", "PULUMI_LANGUAGE"))

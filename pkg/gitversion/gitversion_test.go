@@ -31,7 +31,7 @@ func TestMostRecentTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, headRef)
 
-		hasMostRecent, mostRecent, err := mostRecentTag(repo, headRef.Hash(), false, nil)
+		hasMostRecent, mostRecent, err := mostRecentTag(repo, headRef.Hash(), false, false, nil)
 		require.NoError(t, err)
 		require.True(t, hasMostRecent)
 		require.NotNil(t, mostRecent)
@@ -45,7 +45,7 @@ func TestMostRecentTag(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, head)
 
-		hasMostRecent, mostRecent, err := mostRecentTag(repo, head, false, nil)
+		hasMostRecent, mostRecent, err := mostRecentTag(repo, head, false, false, nil)
 		require.NoError(t, err)
 		require.False(t, hasMostRecent)
 		require.Nil(t, mostRecent)
@@ -81,7 +81,7 @@ func TestMostRecentTag(t *testing.T) {
 
 		isMostRecent := func(expected string, preRelease bool, tagFilter func(string) bool) {
 			hasMostRecent, mostRecent, err := mostRecentTag(repo,
-				headRef.Hash(), preRelease, tagFilter)
+				headRef.Hash(), preRelease, false, tagFilter)
 			require.NoError(t, err)
 			require.True(t, hasMostRecent)
 			require.Equal(t, expected, mostRecent.Name().String())
