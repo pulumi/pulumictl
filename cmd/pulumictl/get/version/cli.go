@@ -14,16 +14,15 @@ import (
 	viperlib "github.com/spf13/viper"
 )
 
-var (
-	language       string
-	versionPrefix  string
-	omitCommitHash bool
-	isPreRelease   bool
-	tagPattern     string
-)
-
 func Command() *cobra.Command {
 	viper := viperlib.New()
+	var (
+		language       string
+		versionPrefix  string
+		omitCommitHash bool
+		isPreRelease   bool
+		tagPattern     string
+	)
 	command := &cobra.Command{
 		Use:   "version",
 		Short: "Calculate versions",
@@ -60,9 +59,7 @@ func Command() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("tag-pattern not a valid regexp: %w", err)
 				}
-				tagFilter = func(tag string) bool {
-					return re.MatchString(tag)
-				}
+				tagFilter = re.MatchString
 			}
 
 			repo, err := git.PlainOpenWithOptions(workingDir, &git.PlainOpenOptions{
