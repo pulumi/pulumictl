@@ -26,8 +26,6 @@ type Payload struct {
 	Ref string `json:"ref"`
 }
 
-const eventType = "pulumi-cli"
-
 func Command() *cobra.Command {
 	viper := viperlib.New()
 	command := &cobra.Command{
@@ -41,6 +39,7 @@ func Command() *cobra.Command {
 			githubToken := viperlib.GetString("token")
 			org = viper.GetString("org")
 			docsRepo := viper.GetString("docs-repo")
+			eventType := viper.GetString("event-type")
 			ref := args[0]
 
 			// perform some string manipulation and validation
@@ -86,7 +85,7 @@ func Command() *cobra.Command {
 			}
 
 			// output stuff
-			fmt.Println("Submitting dispatch event to:", docsRepo)
+			fmt.Printf("Submitting %q dispatch event to: %s\n", eventType, docsRepo)
 			fmt.Println(string(payload))
 
 			return nil
@@ -96,11 +95,14 @@ func Command() *cobra.Command {
 
 	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
 	command.Flags().StringP("docs-repo", "d", "pulumi/docs", "the docs repository to send in the payload")
+	command.Flags().StringP("event-type", "e", "pulumi-cli", "the event type for the repository dispatch")
 
 	util.NoErr(viper.BindEnv("org", "GITHUB_ORG"))
 	util.NoErr(viper.BindEnv("docs-repo", "GITHUB_DOCS_REPO"))
+	util.NoErr(viper.BindEnv("event-type", "GITHUB_EVENT_TYPE"))
 	util.NoErr(viper.BindPFlag("org", command.Flags().Lookup("org")))
 	util.NoErr(viper.BindPFlag("docs-repo", command.Flags().Lookup("docs-repo")))
+	util.NoErr(viper.BindPFlag("event-type", command.Flags().Lookup("event-type")))
 
 	return command
 }
