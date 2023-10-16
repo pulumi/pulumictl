@@ -8,7 +8,7 @@ build: bin
 	go build -C cmd/pulumictl -o ${ROOT_DIR}/bin
 
 install:
-	go -C cmd/pulumictl install
+	go install -C cmd/pulumictl
 
 clean:
 	rm -rf bin
