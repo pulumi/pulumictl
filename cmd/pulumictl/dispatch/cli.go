@@ -3,7 +3,6 @@ package dispatch
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/blang/semver"
@@ -16,13 +15,6 @@ import (
 	viperlib "github.com/spf13/viper"
 )
 
-var (
-	org         string
-	repo        string
-	ref         string
-	tokenClient *http.Client
-)
-
 type Payload struct {
 	Ref string `json:"ref"`
 }
@@ -31,18 +23,33 @@ func Command() *cobra.Command {
 	viper := viperlib.New()
 
 	command := &cobra.Command{
-		Use:   "dispatch [ref]",
+		Use:   "dispatch <ref> | <key>=<value>...",
 		Short: "Send a command dispatch event with a ref",
 		Long:  `Send a repository dispatch payload to a given repo`,
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			// Grab all the configuration variables
 			githubToken := viperlib.GetString("token")
-			org = viper.GetString("org")
 			repo := viper.GetString("repo")
 			command := viper.GetString("command")
-			ref := args[0]
+
+			payloadMap := make(map[string]string)
+			if len(args) == 1 && !strings.Contains(args[0], "=") {
+				payloadMap["ref"] = args[0]
+
+				_, err := semver.Parse(gitversion.StripModuleTagPrefixes(payloadMap["ref"]))
+				if err != nil {
+					return fmt.Errorf("must specify a valid semver ref - value: %s", payloadMap["ref"])
+				}
+			} else {
+				for _, arg := range args {
+					parts := strings.SplitN(arg, "=", 2)
+					if len(parts) != 2 {
+						return fmt.Errorf("invalid argument: %s", arg)
+					}
+					payloadMap[parts[0]] = parts[1]
+				}
+			}
 
 			// perform some string manipulation and validation
 			repoArray := strings.Split(repo, "/")
@@ -52,20 +59,11 @@ func Command() *cobra.Command {
 				return fmt.Errorf("unable to use repo: format must be <org>/<repo> - value: %s", repo)
 			}
 
-			_, err := semver.Parse(gitversion.StripModuleTagPrefixes(ref))
-
-			if err != nil {
-				return fmt.Errorf("must specify a valid semver ref - value: %s", ref)
-			}
-
 			// create a github client and token
 			ctx, client := gh.CreateGithubClient(githubToken)
 
 			// create the JSON payload
-			jsonPayload, err := json.Marshal(Payload{
-				Ref: ref,
-			})
-
+			jsonPayload, err := json.Marshal(payloadMap)
 			if err != nil {
 				return err
 			}
@@ -89,15 +87,12 @@ func Command() *cobra.Command {
 			fmt.Println(string(payload))
 
 			return nil
-
 		},
 	}
 
-	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
 	command.Flags().StringP("repo", "r", "", "the repository to send in the payload")
 	command.Flags().StringP("command", "c", "", "The repository dispatch command to trigger")
 
-	util.NoErr(viper.BindPFlag("org", command.Flags().Lookup("org")))
 	util.NoErr(viper.BindPFlag("repo", command.Flags().Lookup("repo")))
 	util.NoErr(viper.BindPFlag("command", command.Flags().Lookup("command")))
 
