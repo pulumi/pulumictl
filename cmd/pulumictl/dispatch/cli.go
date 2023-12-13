@@ -3,7 +3,6 @@ package dispatch
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/blang/semver"
@@ -14,13 +13,6 @@ import (
 	"github.com/pulumi/pulumictl/pkg/util"
 	"github.com/spf13/cobra"
 	viperlib "github.com/spf13/viper"
-)
-
-var (
-	org         string
-	repo        string
-	ref         string
-	tokenClient *http.Client
 )
 
 type Payload struct {
@@ -38,13 +30,17 @@ func Command() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Grab all the configuration variables
 			githubToken := viperlib.GetString("token")
-			org = viper.GetString("org")
 			repo := viper.GetString("repo")
 			command := viper.GetString("command")
 
 			payloadMap := make(map[string]string)
 			if len(args) == 1 && !strings.Contains(args[0], "=") {
 				payloadMap["ref"] = args[0]
+
+				_, err := semver.Parse(gitversion.StripModuleTagPrefixes(payloadMap["ref"]))
+				if err != nil {
+					return fmt.Errorf("must specify a valid semver ref - value: %s", payloadMap["ref"])
+				}
 			} else {
 				for _, arg := range args {
 					parts := strings.SplitN(arg, "=", 2)
@@ -61,11 +57,6 @@ func Command() *cobra.Command {
 			// if the string split doesn't return 2 values, it's probably not right
 			if len(repoArray) != 2 {
 				return fmt.Errorf("unable to use repo: format must be <org>/<repo> - value: %s", repo)
-			}
-
-			_, err := semver.Parse(gitversion.StripModuleTagPrefixes(ref))
-			if err != nil {
-				return fmt.Errorf("must specify a valid semver ref - value: %s", ref)
 			}
 
 			// create a github client and token
@@ -99,11 +90,9 @@ func Command() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringP("org", "o", "pulumi", "the GitHub org that hosts the provider in the arg")
 	command.Flags().StringP("repo", "r", "", "the repository to send in the payload")
 	command.Flags().StringP("command", "c", "", "The repository dispatch command to trigger")
 
-	util.NoErr(viper.BindPFlag("org", command.Flags().Lookup("org")))
 	util.NoErr(viper.BindPFlag("repo", command.Flags().Lookup("repo")))
 	util.NoErr(viper.BindPFlag("command", command.Flags().Lookup("command")))
 
