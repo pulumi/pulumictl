@@ -5,10 +5,10 @@ bin:
 	mkdir -p bin
 
 build: bin
-	go build -C cmd/pulumictl -o ${ROOT_DIR}/bin
+	CGO_ENABLED=0 go build -C cmd/pulumictl -o ${ROOT_DIR}/bin
 
 install:
-	go install -C cmd/pulumictl
+	CGO_ENABLED=0 go install -C cmd/pulumictl
 
 clean:
 	rm -rf bin

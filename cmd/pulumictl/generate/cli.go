@@ -100,16 +100,16 @@ func getPackage(language string, pkg *schema.Package) (map[string][]byte, error)
 	var err error
 	switch language {
 	case nodejs:
-		resources, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{})
+		resources, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
 	case python:
 		resources, err = pythongen.GeneratePackage(tool, pkg, map[string][]byte{})
 	case golang:
-		resources, err = gogen.GeneratePackage(tool, pkg)
+		resources, err = gogen.GeneratePackage(tool, pkg, nil)
 	case dotnet:
-		resources, err = dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{})
+		resources, err = dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
 	case "all":
 		var tmp map[string][]byte
-		tmp, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{})
+		tmp, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -123,14 +123,14 @@ func getPackage(language string, pkg *schema.Package) (map[string][]byte, error)
 		for fName, source := range tmp {
 			resources[path.Join(python, fName)] = source
 		}
-		tmp, err = gogen.GeneratePackage(tool, pkg)
+		tmp, err = gogen.GeneratePackage(tool, pkg, nil)
 		if err != nil {
 			return nil, err
 		}
 		for fName, source := range tmp {
 			resources[path.Join(golang, fName)] = source
 		}
-		tmp, err = dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{})
+		tmp, err = dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
 		if err != nil {
 			return nil, err
 		}
