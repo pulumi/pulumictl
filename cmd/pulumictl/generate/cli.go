@@ -18,7 +18,6 @@ package generate
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -83,7 +82,7 @@ func Command() *cobra.Command {
 }
 
 func readSchema(schemaPath string) (*schema.Package, error) {
-	schemaBytes, err := ioutil.ReadFile(schemaPath)
+	schemaBytes, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
 	}
@@ -100,16 +99,16 @@ func getPackage(language string, pkg *schema.Package) (map[string][]byte, error)
 	var err error
 	switch language {
 	case nodejs:
-		resources, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{})
+		resources, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil, false)
 	case python:
 		resources, err = pythongen.GeneratePackage(tool, pkg, map[string][]byte{})
 	case golang:
-		resources, err = gogen.GeneratePackage(tool, pkg)
+		resources, err = gogen.GeneratePackage(tool, pkg, nil)
 	case dotnet:
-		resources, err = dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{})
+		resources, err = dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
 	case "all":
 		var tmp map[string][]byte
-		tmp, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{})
+		tmp, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil, false)
 		if err != nil {
 			return nil, err
 		}
@@ -123,14 +122,14 @@ func getPackage(language string, pkg *schema.Package) (map[string][]byte, error)
 		for fName, source := range tmp {
 			resources[path.Join(python, fName)] = source
 		}
-		tmp, err = gogen.GeneratePackage(tool, pkg)
+		tmp, err = gogen.GeneratePackage(tool, pkg, nil)
 		if err != nil {
 			return nil, err
 		}
 		for fName, source := range tmp {
 			resources[path.Join(golang, fName)] = source
 		}
-		tmp, err = dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{})
+		tmp, err = dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +161,7 @@ func writePackage(dir string, pkg map[string][]byte) error {
 		if err != nil && !os.IsExist(err) {
 			return err
 		}
-		err = ioutil.WriteFile(fullPath, source, 0644) //nolint:gosec
+		err = os.WriteFile(fullPath, source, 0644) //nolint:gosec
 		if err != nil {
 			return err
 		}
