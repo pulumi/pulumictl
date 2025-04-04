@@ -119,7 +119,7 @@ func coverCommand() *cobra.Command {
 			"\n" +
 			"merge merges all coverage profiles contained in a given input directory into a\n" +
 			"single coverage profile. Coverage profile filenames must end with '.cov'.",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(*cobra.Command, []string) error {
 			if inPath == "" {
 				return fmt.Errorf("the -in flag is required")
 			}

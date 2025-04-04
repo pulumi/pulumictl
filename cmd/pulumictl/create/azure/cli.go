@@ -35,7 +35,7 @@ func Command() *cobra.Command {
 		Short: "Publish the Azure Nextgen Provider SDK",
 		Long:  `Send a repository dispatch payload to the pulumi-azure-nextgen repo that triggers the publishing of the SDK`,
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
 			githubToken := viperlib.GetString("token")

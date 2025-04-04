@@ -42,7 +42,7 @@ func Command() *cobra.Command {
 		Example: "pulumictl download-binary -n my-binary -r pulumi/pulumi-mybinary -v v0.0.1",
 		Long: short + "\n" +
 			"\nThis will download a version of binary to a specific location.",
-		Run: cmdutil.RunFunc(func(cmd *cobra.Command, args []string) error {
+		Run: cmdutil.RunFunc(func(*cobra.Command, []string) error {
 			filename := fmt.Sprintf("%s-%s-%s-%s.tar.gz", name, version, runtime.GOOS, runtime.GOARCH)
 			downloadURL := fmt.Sprintf("%s/%s/releases/download/%s/%s", host, repoSlug, version, filename)
 

@@ -38,7 +38,7 @@ func Command() *cobra.Command {
 			" pulumi-chocolatey repo that triggers the" +
 			" deployment of a chocolatey package",
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
 			githubToken = viperlib.GetString("token")

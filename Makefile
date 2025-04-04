@@ -15,3 +15,12 @@ clean:
 
 lint:
 	cd cmd && golangci-lint run -c ../.golangci.yml --timeout 5m
+
+lint_docker:
+	mkdir -p .golangci-docker-cache
+	docker run --rm \
+		-v $$(pwd):/app \
+		-v $$(pwd)/.golangci-docker-cache:/root/.cache/golangci-lint \
+		-w /app \
+		golangci/golangci-lint:v1.64.2 \
+		golangci-lint run -c .golangci.yml --timeout 5m ./cmd/...

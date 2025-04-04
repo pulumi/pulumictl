@@ -16,7 +16,7 @@ func Command() *cobra.Command {
 		Use:   "version",
 		Short: "Get the current version",
 		Long:  `Get the current version of pulumictl`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(*cobra.Command, []string) error {
 
 			v := version.Version
 			// If we haven't set a version with linker flags, use this tool to get the version

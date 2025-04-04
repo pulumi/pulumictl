@@ -33,7 +33,7 @@ func Command() *cobra.Command {
 		Short: "Create a docs build",
 		Long:  `Send a repository dispatch payload to the docs repo`,
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
 			githubToken := viperlib.GetString("token")
