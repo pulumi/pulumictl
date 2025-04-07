@@ -38,7 +38,7 @@ func Command() *cobra.Command {
 		Long: "Send a repository dispatch payload to the pulumi repo that triggers" +
 			" the deployment of a homebrew formulae bump",
 		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 
 			// Grab all the configuration variables
 			githubToken := viperlib.GetString("token")

@@ -27,7 +27,7 @@ func Command() *cobra.Command {
 		Short: "Send a command dispatch event with a ref",
 		Long:  `Send a repository dispatch payload to a given repo`,
 		Args:  cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			// Grab all the configuration variables
 			githubToken := viperlib.GetString("token")
 			repo := viper.GetString("repo")

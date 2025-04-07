@@ -52,7 +52,7 @@ func Command() *cobra.Command {
 			"\nThis is a simple wrapper around a call to `GeneratePackage` in the appropriate language.\n" +
 			"This is intended to make it easier to observe changes for code generation.\n" +
 			"This is not intended to produce production code.\n",
-		Run: cmdutil.RunFunc(func(cmd *cobra.Command, args []string) error {
+		Run: cmdutil.RunFunc(func(*cobra.Command, []string) error {
 			var schema *schema.Package
 			var err error
 			schema, err = readSchema(inputFile)

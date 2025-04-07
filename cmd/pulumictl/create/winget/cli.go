@@ -25,7 +25,7 @@ func Command() *cobra.Command {
 		Long: "Send a repository dispatch payload to the pulumi-winget " +
 			"repo that triggers the deployment of a winget package",
 		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(*cobra.Command, []string) error {
 
 			// Grab all the configuration variables
 			githubToken := viperlib.GetString("token")
