@@ -1,4 +1,4 @@
-// Copyright 2016-2021, Pulumi Corporation.
+// Copyright 2016-2025, Pulumi Corporation.
 //
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -99,23 +99,23 @@ func getPackage(language string, pkg *schema.Package) (map[string][]byte, error)
 	var err error
 	switch language {
 	case nodejs:
-		resources, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil, false)
+		resources, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil, false, nil)
 	case python:
-		resources, err = pythongen.GeneratePackage(tool, pkg, map[string][]byte{})
+		resources, err = pythongen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
 	case golang:
 		resources, err = gogen.GeneratePackage(tool, pkg, nil)
 	case dotnet:
 		resources, err = dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
 	case "all":
 		var tmp map[string][]byte
-		tmp, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil, false)
+		tmp, err = nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil, false, nil)
 		if err != nil {
 			return nil, err
 		}
 		for fName, source := range tmp {
 			resources[path.Join(nodejs, fName)] = source
 		}
-		tmp, err = pythongen.GeneratePackage(tool, pkg, map[string][]byte{})
+		tmp, err = pythongen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
 		if err != nil {
 			return nil, err
 		}
