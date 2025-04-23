@@ -70,6 +70,7 @@ func Command() *cobra.Command {
 			}
 			return nil
 		}),
+		Deprecated: "use 'pulumi package gen-sdk' instead",
 	}
 	cmd.PersistentFlags().StringVarP(&language,
 		"language", "l", "all", "Language to emit in")
@@ -150,18 +151,18 @@ func displayPackage(pkg map[string][]byte) {
 }
 
 func writePackage(dir string, pkg map[string][]byte) error {
-	err := os.Mkdir(dir, 0755)
+	err := os.Mkdir(dir, 0o755)
 	if err != nil && !os.IsExist(err) {
 		return err
 	}
 	for name, source := range pkg {
 		// We do this because name might contain directories
 		fullPath := path.Join(dir, name)
-		err = os.MkdirAll(path.Dir(fullPath), 0755)
+		err = os.MkdirAll(path.Dir(fullPath), 0o755)
 		if err != nil && !os.IsExist(err) {
 			return err
 		}
-		err = os.WriteFile(fullPath, source, 0644) //nolint:gosec
+		err = os.WriteFile(fullPath, source, 0o644) //nolint:gosec
 		if err != nil {
 			return err
 		}
