@@ -1,12 +1,22 @@
+permissions: write-all # Equivalent to default permissions plus id-token: write
+env:
+  ESC_ACTION_OIDC_AUTH: true
+  ESC_ACTION_OIDC_ORGANIZATION: pulumi
+  ESC_ACTION_OIDC_REQUESTED_TOKEN_TYPE: urn:pulumi:token-type:access_token:organization
+  ESC_ACTION_ENVIRONMENT: imports/github-secrets
+  ESC_ACTION_EXPORT_ENVIRONMENT_VARIABLES: false
 name: prerelease
 on:
   push:
-    tags: [ "*.*.*-**" ] # Glob pattern matching valid prelease semver
+    tags: ["*.*.*-**"]
 
-jobs:    
+jobs:
   goreleaser:
     runs-on: macos-latest
     steps:
+      - name: Fetch secrets from ESC
+        id: esc-secrets
+        uses: pulumi/esc-action@v1
       - name: Checkout
         uses: actions/checkout@v4
       - name: Unshallow clone
@@ -21,4 +31,4 @@ jobs:
           version: v1.26.2
           args: release --rm-dist --config=.goreleaser.prelease.yml
         env:
-          GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.esc-secrets.outputs.BOT_GITHUB_TOKEN }}
