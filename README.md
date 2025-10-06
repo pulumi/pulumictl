@@ -35,11 +35,29 @@ Use "pulumictl [command] --help" for more information about a command.
 
 ## Installation
 
+### macOS
+
 Add the Pulumi homebrew tap and install:
 
 ```bash
 brew tap pulumi/tap
 brew install pulumictl
 ```
+
+### Linux
+
+Install the latest release using the installation script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pulumi/pulumictl/master/install.sh | sh
+```
+
+Or download a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pulumi/pulumictl/master/install.sh | sh -s -- --version 1.0.0
+```
+
+### Manual Installation
 
 Or download the binary directly from Github releases and place it in your `$PATH`
